@@ -16,7 +16,7 @@ if not os.path.exists(UPLOAD_FOLDER):
     os.makedirs(UPLOAD_FOLDER)
 
 # Load trained model
-model = tf.keras.models.load_model("deepfake_detector.keras")
+model = tf.keras.models.load_model("models/deepfake_detector.keras")
 
 
 def predict_image(img_path):
