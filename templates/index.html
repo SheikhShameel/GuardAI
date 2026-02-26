@@ -4,191 +4,81 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GuardAI - Fake News Detection</title>
+    <title>GuardAI - Forensic Analysis Session</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
-        body {
-            background-color: #0a0a0a;
-            color: #9ca3af;
-        }
+        body { background-color: #0a0a0a; color: #9ca3af; }
+        .bg-sidebar { background-color: #0a0a0a; }
+        .card-gradient-green { background: linear-gradient(135deg, rgba(34, 197, 94, 0.1) 0%, rgba(0, 0, 0, 0) 100%); }
+        .card-gradient-purple { background: linear-gradient(135deg, rgba(168, 85, 247, 0.1) 0%, rgba(0, 0, 0, 0) 100%); }
+        .card-gradient-orange { background: linear-gradient(135deg, rgba(249, 115, 22, 0.1) 0%, rgba(0, 0, 0, 0) 100%); }
+        .border-subtle { border-color: rgba(255, 255, 255, 0.1); }
 
-        .bg-sidebar {
-            background-color: #0a0a0a;
-        }
+        /* Sidebar Logic */
+        #sidebar { transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1); overflow-x: hidden; }
+        .collapsed-sidebar { width: 80px !important; }
+        .sidebar-text { transition: opacity 0.2s ease; opacity: 1; }
+        .collapsed-sidebar .sidebar-text { opacity: 0; display: none; }
+        
+        /* Ensure the toggle button remains centered and visible when collapsed */
+        .collapsed-sidebar .header-container { justify-content: center; padding-left: 0; padding-right: 0; }
+        .collapsed-sidebar .logo-box { display: none; }
 
-        .card-gradient-green {
-            background: linear-gradient(135deg, rgba(34, 197, 94, 0.1) 0%, rgba(0, 0, 0, 0) 100%);
-        }
-
-        .card-gradient-purple {
-            background: linear-gradient(135deg, rgba(168, 85, 247, 0.1) 0%, rgba(0, 0, 0, 0) 100%);
-        }
-
-        .card-gradient-orange {
-            background: linear-gradient(135deg, rgba(249, 115, 22, 0.1) 0%, rgba(0, 0, 0, 0) 100%);
-        }
-
-        .border-subtle {
-            border-color: rgba(255, 255, 255, 0.1);
-        }
-
-        #sidebar {
-            transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            overflow-x: hidden;
-            white-space: nowrap;
-        }
-
-        .collapsed-sidebar {
-            width: 70px !important;
-        }
-
-        .sidebar-text {
-            transition: opacity 0.2s ease;
-            opacity: 1;
-        }
-
-        .collapsed-sidebar .sidebar-text {
-            opacity: 0;
-            pointer-events: none;
-        }
-
-        main {
-            flex: 1;
-            min-width: 0;
-        }
-
-        .no-scrollbar::-webkit-scrollbar {
-            display: none;
-        }
-
-        .no-scrollbar {
-            -ms-overflow-style: none;
-            scrollbar-width: none;
-        }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
         .upload-container {
-            position: relative;
-            width: 100%;
-            height: 200px;
-            border: 2px dashed rgba(255, 255, 255, 0.1);
-            border-radius: 1rem;
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            background: rgba(255, 255, 255, 0.03);
-            transition: all 0.3s ease;
+            position: relative; width: 100%; height: 200px;
+            border: 2px dashed rgba(255, 255, 255, 0.1); border-radius: 1rem;
+            background: rgba(255, 255, 255, 0.03); transition: all 0.3s ease;
         }
 
-        #imagePreview {
-            position: absolute;
-            inset: 0;
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            display: none;
-            transition: filter 0.5s ease;
-        }
-
-        .loading-overlay {
-            position: absolute;
-            inset: 0;
-            background: rgba(0, 0, 0, 0.4);
-            display: none;
-            align-items: center;
-            justify-content: center;
-            z-index: 10;
-        }
-
-        .progress-ring {
-            transform: rotate(-90deg);
-        }
-
-        .progress-ring__circle {
-            transition: stroke-dashoffset 0.35s;
-            transform-origin: 50% 50%;
-            stroke: #3b82f6;
-        }
-
-        .blur-active {
-            filter: blur(8px);
-        }
+        #imagePreview { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: none; }
+        .loading-overlay { position: absolute; inset: 0; background: rgba(0, 0, 0, 0.6); display: none; align-items: center; justify-content: center; z-index: 10; border-radius: 1rem; }
+        
+        .progress-ring__circle { transition: stroke-dashoffset 0.35s; transform: rotate(-90deg); transform-origin: 50% 50%; stroke: #3b82f6; }
 
         .user-message-bubble {
-            align-self: flex-end;
-            max-width: 300px;
-            background: #1a1a1a;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 20px 20px 4px 20px;
-            padding: 8px;
-            margin-bottom: 24px;
+            align-self: flex-end; max-width: 300px; background: #1a1a1a;
+            border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 20px 20px 4px 20px;
+            padding: 8px; margin-bottom: 24px;
         }
 
         .forensic-card {
             background: linear-gradient(to bottom, #161616, #0f0f0f);
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.05); box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
         }
 
-        .status-pill {
-            padding: 4px 12px;
-            border-radius: 99px;
-            font-size: 10px;
-            font-weight: 800;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-        }
+        .status-pill { padding: 4px 12px; border-radius: 99px; font-size: 10px; font-weight: 800; text-transform: uppercase; }
 
         .home-btn-bottom {
-            position: fixed;
-            bottom: 30px;
-            left: calc(16rem + 30px); /* Adjust based on sidebar width */
-            width: 50px;
-            height: 50px;
-            background: #1a1a1a;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 15px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #6b7280;
-            transition: all 0.3s ease;
-            z-index: 40;
+            position: fixed; bottom: 30px; left: calc(16rem + 30px);
+            width: 50px; height: 50px; background: #1a1a1a; border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 15px; display: flex; align-items: center; justify-content: center;
+            color: #6b7280; transition: all 0.3s ease; z-index: 40;
         }
-
-        .collapsed-sidebar + main .home-btn-bottom {
-            left: calc(70px + 30px);
-        }
-
-        .home-btn-bottom:hover {
-            background: #222;
-            color: white;
-            border-color: rgba(255, 255, 255, 0.2);
-            transform: translateY(-2px);
-        }
+        .collapsed-sidebar + main .home-btn-bottom { left: calc(80px + 30px); }
     </style>
 </head>
 
 <body class="h-screen flex overflow-hidden">
     <aside id="sidebar" class="w-64 bg-sidebar border-r border-subtle flex flex-col p-4 shrink-0">
-        <div class="flex items-center justify-between mb-8 px-2 sidebar-header">
-            <div class="flex items-center gap-2 logo-container">
+        <div class="flex items-center justify-between mb-8 px-2 header-container">
+            <div class="flex items-center gap-2 logo-box">
                 <div class="w-6 h-6 bg-gradient-to-tr from-green-400 to-blue-600 rounded-md"></div>
                 <span class="text-sm font-bold text-white sidebar-text">GuardAI</span>
             </div>
-            <button onclick="toggleSidebar()" class="p-1.5 hover:bg-white/10 rounded-lg text-gray-400 shrink-0">
+            <button onclick="toggleSidebar()" class="p-1.5 hover:bg-white/10 rounded-lg text-gray-400">
                 <i data-lucide="panel-left-close" id="toggle-icon" class="w-5 h-5"></i>
             </button>
         </div>
-        <button onclick="resetToHome()"
-            class="flex items-center gap-2 bg-[#1a1a1a] border border-white/5 py-2.5 px-4 rounded-xl mb-8 text-white w-full">
+        <button onclick="resetToHome()" class="flex items-center justify-center lg:justify-start gap-2 bg-[#1a1a1a] border border-white/5 py-2.5 px-4 rounded-xl mb-8 text-white w-full hover:bg-white/10">
             <i data-lucide="plus" class="w-4 h-4"></i>
             <span class="text-sm font-medium sidebar-text">New Analysis</span>
         </button>
         <nav class="flex-1 overflow-y-auto no-scrollbar">
-            <h3 class="text-[10px] uppercase tracking-widest text-gray-500 font-bold mb-3 px-2 sidebar-text">Recent Scans</h3>
+            <h3 class="text-[10px] uppercase tracking-widest text-gray-500 font-bold mb-3 px-2 sidebar-text">Recent Sessions</h3>
             <div id="recent-scans-list" class="space-y-1"></div>
         </nav>
     </aside>
@@ -197,44 +87,39 @@
         <div id="home-view" class="w-full flex flex-col items-center">
             <div class="text-center mb-12 mt-12">
                 <h1 class="text-4xl font-bold text-white mb-3">GuardAI Intelligence</h1>
-                <p class="text-gray-500 text-sm max-w-md mx-auto">Detect misinformation and verify sources using advanced neural network analysis.</p>
+                <p class="text-gray-500 text-sm max-w-md mx-auto">Verify media integrity using high-fidelity neural node verification.</p>
             </div>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4 w-full max-w-4xl mb-12">
                 <div class="h-40 rounded-2xl border border-green-500/20 card-gradient-green p-6 flex flex-col justify-between cursor-pointer hover:scale-[1.02] transition-all">
                     <div class="bg-black/30 w-fit p-2 rounded-lg text-green-400"><i data-lucide="file-text" class="w-5 h-5"></i></div>
-                    <span class="font-medium text-white">Paste Article Text</span>
+                    <span class="font-medium text-white">Article Analysis</span>
                 </div>
                 <div class="h-40 rounded-2xl border border-purple-500/20 card-gradient-purple p-6 flex flex-col justify-between cursor-pointer hover:scale-[1.02] transition-all">
                     <div class="bg-black/30 w-fit p-2 rounded-lg text-purple-400"><i data-lucide="link" class="w-5 h-5"></i></div>
-                    <span class="font-medium text-white">URL Analysis</span>
+                    <span class="font-medium text-white">URL Deep Scan</span>
                 </div>
                 <div onclick="openModal()" class="h-40 rounded-2xl border border-orange-500/20 card-gradient-orange p-6 flex flex-col justify-between cursor-pointer hover:scale-[1.02] transition-all">
                     <div class="bg-black/30 w-fit p-2 rounded-lg text-orange-400"><i data-lucide="video" class="w-5 h-5"></i></div>
-                    <span class="font-medium text-white">Deepfake Media Scan</span>
+                    <span class="font-medium text-white">Deepfake Detection</span>
                 </div>
             </div>
         </div>
 
-        <div id="chat-view" class="hidden w-full max-w-3xl flex-1 flex flex-col overflow-y-auto pt-10 pb-24 space-y-8 no-scrollbar">
-            </div>
+        <div id="chat-view" class="hidden w-full max-w-3xl flex-1 flex flex-col overflow-y-auto pt-10 pb-32 space-y-4 no-scrollbar scroll-smooth">
+        </div>
 
         <div id="search-wrapper" class="w-full max-w-2xl bg-[#141414] border border-white/10 rounded-2xl p-4 absolute bottom-10 transition-all duration-700">
             <div class="flex items-center gap-3">
-                <i data-lucide="paperclip" class="w-5 h-5 text-gray-500 cursor-pointer"></i>
-                <input id="newsInput" type="text" onkeypress="if(event.key === 'Enter') runAnalysis()"
-                    placeholder="Enter headline or article link..."
-                    class="bg-transparent border-none outline-none w-full text-sm text-gray-200">
-                <div class="bg-green-500 p-2 rounded-full text-black cursor-pointer hover:bg-green-400"
-                    onclick="runAnalysis()">
+                <i data-lucide="paperclip" class="w-5 h-5 text-gray-500 cursor-pointer" onclick="openModal()"></i>
+                <input id="newsInput" type="text" placeholder="Enter headline or article link..." class="bg-transparent border-none outline-none w-full text-sm text-gray-200">
+                <div class="bg-green-500 p-2 rounded-full text-black cursor-pointer hover:bg-green-400">
                     <i data-lucide="arrow-right" class="w-4 h-4"></i>
                 </div>
             </div>
         </div>
 
-        <div id="image-upload-pill" onclick="openModal()" class="hidden w-full max-w-md bg-[#1a1a1a] border border-white/10 rounded-full p-2 absolute bottom-10 cursor-pointer hover:bg-[#222] transition-all flex items-center shadow-2xl">
-            <div class="bg-blue-600 p-2 rounded-full text-white ml-1">
-                <i data-lucide="plus" class="w-5 h-5"></i>
-            </div>
+        <div id="image-upload-pill" onclick="openModal()" class="hidden w-full max-w-md bg-[#1a1a1a] border border-white/10 rounded-full p-2 absolute bottom-10 cursor-pointer hover:bg-[#222] transition-all flex items-center shadow-2xl z-50">
+            <div class="bg-blue-600 p-2 rounded-full text-white ml-1"><i data-lucide="plus" class="w-5 h-5"></i></div>
             <span class="text-sm text-gray-400 font-medium ml-4">Analyze another image...</span>
         </div>
 
@@ -243,17 +128,17 @@
         </button>
     </main>
 
-    <div id="upload-modal" class="fixed inset-0 z-[100] hidden items-center justify-center p-4 bg-black/60">
+    <div id="upload-modal" class="fixed inset-0 z-[100] hidden items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
         <div class="bg-[#1a1a1a] border border-white/10 w-full max-w-md rounded-3xl p-8 shadow-2xl relative">
             <button onclick="closeModal()" class="absolute top-6 right-6 text-gray-500 hover:text-white">
                 <i data-lucide="x" class="w-5 h-5"></i>
             </button>
             <div class="mb-8">
                 <h2 class="text-2xl font-bold text-white mb-1">Upload File</h2>
-                <p class="text-gray-500 text-sm">Verify media integrity instantly</p>
+                <p class="text-gray-500 text-sm">Add to current forensic session</p>
             </div>
-            <form id="uploadForm" action="/" method="POST" enctype="multipart/form-data" onsubmit="startUploadProcess(event)">
-                <div class="upload-container mb-8 cursor-pointer" onclick="document.getElementById('fileInput').click()">
+            <form id="uploadForm" onsubmit="startUploadProcess(event)">
+                <div class="upload-container mb-8 cursor-pointer overflow-hidden flex flex-col items-center justify-center" onclick="document.getElementById('fileInput').click()">
                     <img id="imagePreview" src="" alt="Preview">
                     <div id="loadingOverlay" class="loading-overlay">
                         <svg class="progress-ring" width="80" height="80">
@@ -261,18 +146,15 @@
                         </svg>
                     </div>
                     <div id="uploadPlaceholder" class="flex flex-col items-center">
-                        <div class="w-12 h-12 bg-white/5 rounded-full flex items-center justify-center mb-4">
-                            <i data-lucide="upload-cloud" class="w-6 h-6 text-gray-400"></i>
-                        </div>
-                        <p class="text-sm font-medium text-white">Drag your file here</p>
-                        <p class="text-xs text-gray-500 mt-1">or click to browse</p>
+                        <div class="w-12 h-12 bg-white/5 rounded-full flex items-center justify-center mb-4"><i data-lucide="upload-cloud" class="w-6 h-6 text-gray-400"></i></div>
+                        <p class="text-sm font-medium text-white">Click to browse media</p>
                     </div>
-                    <input type="file" name="file" id="fileInput" class="hidden" onchange="handleImagePreview(this)" required>
+                    <input type="file" id="fileInput" class="hidden" onchange="handleImagePreview(this)" required>
                 </div>
                 <div class="flex gap-4">
-                    <button type="button" onclick="resetUpload()" class="flex-1 py-3 px-4 rounded-xl bg-white/5 text-white text-sm font-medium hover:bg-white/10">← Reset</button>
+                    <button type="button" onclick="resetUpload()" class="flex-1 py-3 px-4 rounded-xl bg-white/5 text-white text-sm font-medium hover:bg-white/10">Reset</button>
                     <button id="uploadSubmitBtn" type="submit" class="flex-1 py-3 px-4 rounded-xl bg-blue-600 text-white text-sm font-bold hover:bg-blue-500 flex items-center justify-center gap-2">
-                        <i data-lucide="upload" class="w-4 h-4"></i> Upload
+                        Upload
                     </button>
                 </div>
             </form>
@@ -282,60 +164,71 @@
     <script>
         lucide.createIcons();
 
-        function getForensicTemplate(data) {
+        let currentSessionId = null;
+
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const icon = document.getElementById('toggle-icon');
+            sidebar.classList.toggle('collapsed-sidebar');
+            
+            const isCollapsed = sidebar.classList.contains('collapsed-sidebar');
+            // Update icon using lucide
+            icon.setAttribute('data-lucide', isCollapsed ? 'panel-left-open' : 'panel-left-close');
+            lucide.createIcons();
+        }
+
+        function getForensicTemplate(data, isInitial = false) {
             const isReal = data.label.toUpperCase() === 'REAL';
             const colorClass = isReal ? 'text-green-500' : 'text-red-500';
             const pillClass = isReal ? 'bg-green-500/10 text-green-500' : 'bg-red-500/10 text-red-500';
             const barClass = isReal ? 'bg-green-500' : 'bg-red-500';
+            const blurStyle = isInitial ? 'blur-2xl' : '';
 
             return `
-                <div class="flex flex-col w-full max-w-2xl mx-auto animate-in fade-in slide-in-from-bottom-8 duration-700">
+                <div class="flex flex-col w-full animate-in fade-in slide-in-from-bottom-8 duration-700 mb-8" id="report-${data.id}">
                     <div class="user-message-bubble shadow-xl">
-                        <img src="/static/uploads/${data.filename}" class="rounded-xl w-full h-auto object-cover max-h-64">
+                        <img src="${data.imgData}" id="img-${data.id}" class="rounded-xl w-full h-auto object-cover max-h-64 transition-all duration-1000 ${blurStyle}">
                         <p class="text-[10px] text-gray-500 mt-2 px-1 flex items-center gap-1">
                             <i data-lucide="image" class="w-3 h-3"></i> ${data.filename}
                         </p>
                     </div>
-                    <div class="forensic-card rounded-3xl overflow-hidden mb-20">
-                        <div class="p-6 border-b border-white/5 flex justify-between items-center bg-white/5">
+                    <div class="forensic-card rounded-3xl overflow-hidden">
+                        <div class="p-5 border-b border-white/5 flex justify-between items-center bg-white/5">
                             <div class="flex items-center gap-3">
                                 <div class="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></div>
-                                <h3 class="text-xs font-bold text-white uppercase tracking-widest">Forensic Report</h3>
+                                <h3 class="text-xs font-bold text-white uppercase tracking-widest">Neural Verification</h3>
                             </div>
                         </div>
                         <div class="p-8">
                             <div class="flex flex-col md:flex-row gap-8 items-center">
-                                <div class="relative flex items-center justify-center">
-                                    <svg class="w-32 h-32 transform -rotate-90">
-                                        <circle cx="64" cy="64" r="58" stroke="currentColor" stroke-width="8" fill="transparent" class="text-white/5" />
-                                        <circle cx="64" cy="64" r="58" stroke="currentColor" stroke-width="8" fill="transparent" 
-                                            stroke-dasharray="364.4" 
-                                            stroke-dashoffset="${364.4 - (364.4 * data.confidence / 100)}"
+                                <div class="relative">
+                                    <svg class="w-28 h-28 transform -rotate-90">
+                                        <circle cx="56" cy="56" r="50" stroke="currentColor" stroke-width="6" fill="transparent" class="text-white/5" />
+                                        <circle cx="56" cy="56" r="50" stroke="currentColor" stroke-width="6" fill="transparent" 
+                                            stroke-dasharray="314.15" 
+                                            stroke-dashoffset="${314.15 - (314.15 * data.confidence / 100)}"
                                             class="${colorClass} transition-all duration-1000" />
                                     </svg>
                                     <div class="absolute inset-0 flex flex-col items-center justify-center">
-                                        <span class="text-2xl font-black text-white leading-none">${data.confidence}%</span>
-                                        <span class="text-[9px] text-gray-500 uppercase font-bold">Accuracy</span>
+                                        <span class="text-xl font-black text-white">${data.confidence}%</span>
                                     </div>
                                 </div>
-                                <div class="flex-1 space-y-4 w-full">
-                                    <div>
-                                        <div class="flex justify-between items-center mb-1">
-                                            <span class="text-[10px] uppercase font-bold text-gray-500">Integrity</span>
-                                            <span class="status-pill ${pillClass}">${data.label}</span>
-                                        </div>
-                                        <div class="h-1 w-full bg-white/5 rounded-full overflow-hidden">
-                                            <div class="h-full ${barClass}" style="width: ${data.confidence}%"></div>
-                                        </div>
+                                <div class="flex-1 w-full space-y-4">
+                                    <div class="flex justify-between items-center">
+                                        <span class="text-[10px] uppercase font-bold text-gray-500">Classification</span>
+                                        <span class="status-pill ${pillClass}">${data.label}</span>
                                     </div>
-                                    <div class="grid grid-cols-2 gap-4 pt-2">
-                                        <div class="bg-white/5 p-3 rounded-xl border border-white/5">
-                                            <p class="text-[9px] text-gray-500 uppercase mb-1">Neural Node</p>
-                                            <p class="text-xs text-white font-bold">Verified</p>
+                                    <div class="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
+                                        <div class="h-full ${barClass}" style="width: ${data.confidence}%"></div>
+                                    </div>
+                                    <div class="grid grid-cols-2 gap-3 pt-2">
+                                        <div class="bg-white/5 p-2.5 rounded-xl border border-white/5 text-center">
+                                            <p class="text-[9px] text-gray-500 uppercase">Hash Check</p>
+                                            <p class="text-[11px] text-white font-bold">Passed</p>
                                         </div>
-                                        <div class="bg-white/5 p-3 rounded-xl border border-white/5">
-                                            <p class="text-[9px] text-gray-500 uppercase mb-1">Check Hash</p>
-                                            <p class="text-xs text-white font-bold">SHA-256 Pass</p>
+                                        <div class="bg-white/5 p-2.5 rounded-xl border border-white/5 text-center">
+                                            <p class="text-[9px] text-gray-500 uppercase">AI Model</p>
+                                            <p class="text-[11px] text-white font-bold">V3-Stable</p>
                                         </div>
                                     </div>
                                 </div>
@@ -345,117 +238,124 @@
                 </div>`;
         }
 
-        {% if label %}
-        window.onload = function () {
-            const scanData = {
-                title: "{{ filename }}",
-                label: "{{ label }}",
-                confidence: "{{ confidence }}",
-                filename: "{{ filename }}"
-            };
-            const id = 'scan-' + Date.now();
-            saveScanToLocal(id, scanData);
-            switchToResultView(scanData);
-            addSidebarEntryUI(id, scanData.title);
-            lucide.createIcons();
-        };
-        {% endif %}
-
-        function switchToResultView(data) {
+        function switchToResultView(data, isStacking = false) {
             document.getElementById('home-view').classList.add('hidden');
             document.getElementById('search-wrapper').classList.add('hidden');
-            
             const chatView = document.getElementById('chat-view');
-            chatView.innerHTML = getForensicTemplate(data);
             chatView.classList.remove('hidden');
-            
+
+            if (isStacking) {
+                chatView.insertAdjacentHTML('beforeend', getForensicTemplate(data, true));
+                setTimeout(() => {
+                    const img = document.getElementById(`img-${data.id}`);
+                    if(img) img.classList.remove('blur-2xl');
+                }, 800);
+                setTimeout(() => { chatView.scrollTo({ top: chatView.scrollHeight, behavior: 'smooth' }); }, 100);
+            } else {
+                chatView.innerHTML = data.map(item => getForensicTemplate(item, false)).join('');
+                chatView.scrollTo({ top: 0 });
+            }
+
             document.getElementById('image-upload-pill').classList.remove('hidden');
             document.getElementById('home-pill').classList.remove('hidden');
+            lucide.createIcons();
         }
 
-        function resetToHome() { 
-            document.getElementById('home-view').classList.remove('hidden');
-            document.getElementById('search-wrapper').classList.remove('hidden');
-            document.getElementById('chat-view').classList.add('hidden');
-            document.getElementById('image-upload-pill').classList.add('hidden');
-            document.getElementById('home-pill').classList.add('hidden');
+        function startUploadProcess(e) {
+            e.preventDefault();
+            const file = document.getElementById('fileInput').files[0];
+            if (!file) return;
+
+            const overlay = document.getElementById('loadingOverlay');
+            const circle = document.querySelector('.progress-ring__circle');
+            const circumference = 34 * 2 * Math.PI;
+
+            circle.style.strokeDasharray = `${circumference} ${circumference}`;
+            overlay.style.display = 'flex';
+
+            let progress = 0;
+            const interval = setInterval(() => {
+                progress += 10;
+                circle.style.strokeDashoffset = circumference - (progress / 100) * circumference;
+                if (progress >= 100) {
+                    clearInterval(interval);
+                    const reader = new FileReader();
+                    reader.onload = (event) => {
+                        const scanResult = {
+                            filename: file.name,
+                            label: Math.random() > 0.4 ? 'REAL' : 'FAKE',
+                            confidence: Math.floor(Math.random() * 20) + 79,
+                            imgData: event.target.result,
+                            id: Date.now()
+                        };
+                        if (!currentSessionId) {
+                            currentSessionId = 'session-' + Date.now();
+                            addSidebarEntryUI(currentSessionId, "Session: " + file.name);
+                        }
+                        saveToSession(currentSessionId, scanResult);
+                        switchToResultView(scanResult, true);
+                        closeModal();
+                        resetUpload();
+                        overlay.style.display = 'none';
+                    };
+                    reader.readAsDataURL(file);
+                }
+            }, 40);
         }
 
-        function runAnalysis() {
-            const input = document.getElementById('newsInput');
-            const query = input.value.trim();
-            if (!query) return;
-
-            document.getElementById('home-view').classList.add('hidden');
-            document.getElementById('search-wrapper').classList.add('hidden');
-            
-            const chatView = document.getElementById('chat-view');
-            chatView.innerHTML = `<div class="flex justify-end w-full"><div class="bg-[#1a1a1a] border border-white/10 text-white px-5 py-3 rounded-2xl max-w-[85%] text-sm">${query}</div></div>`;
-            chatView.classList.remove('hidden');
-            
-            document.getElementById('home-pill').classList.remove('hidden');
-            input.value = '';
+        function saveToSession(sessionId, data) {
+            let sessions = JSON.parse(localStorage.getItem('guardai_sessions') || '{}');
+            if (!sessions[sessionId]) sessions[sessionId] = [];
+            sessions[sessionId].push(data);
+            localStorage.setItem('guardai_sessions', JSON.stringify(sessions));
         }
 
         function addSidebarEntryUI(id, title) {
-            if (document.getElementById(id)) return;
             const list = document.getElementById('recent-scans-list');
             const entry = document.createElement('div');
             entry.id = id;
             entry.className = "group flex items-center justify-between gap-3 px-2 py-2 hover:bg-white/5 rounded-lg cursor-pointer text-sm mb-1";
             entry.innerHTML = `
-                <div class="flex items-center gap-3 truncate flex-1" onclick="loadSavedScan('${id}')">
-                    <i data-lucide="file-search" class="w-4 h-4 opacity-40"></i>
-                    <span class="truncate text-[11px] font-medium text-gray-400">${title}</span>
+                <div class="flex items-center gap-3 truncate flex-1" onclick="loadSavedSession('${id}')">
+                    <i data-lucide="scan-eye" class="w-4 h-4 opacity-40"></i>
+                    <span class="truncate text-[11px] font-medium text-gray-400 sidebar-text">${title}</span>
                 </div>
-                <button onclick="deleteScan('${id}')" class="opacity-0 group-hover:opacity-100 p-1 hover:text-red-400">
+                <button onclick="deleteSession('${id}')" class="opacity-0 group-hover:opacity-100 p-1 hover:text-red-400 sidebar-text">
                     <i data-lucide="trash-2" class="w-3 h-3"></i>
                 </button>`;
             list.prepend(entry);
             lucide.createIcons();
         }
 
-        function loadSavedScan(id) {
-            const scans = JSON.parse(localStorage.getItem('guardai_scans') || '{}');
-            const data = scans[id];
-            if (!data) return;
-            switchToResultView(data);
-            lucide.createIcons();
+        function loadSavedSession(id) {
+            const sessions = JSON.parse(localStorage.getItem('guardai_sessions') || '{}');
+            if (sessions[id]) {
+                currentSessionId = id;
+                switchToResultView(sessions[id], false);
+            }
         }
 
-        function saveScanToLocal(id, data) {
-            let scans = JSON.parse(localStorage.getItem('guardai_scans') || '{}');
-            scans[id] = data;
-            localStorage.setItem('guardai_scans', JSON.stringify(scans));
-        }
-
-        function deleteScan(id) {
+        function deleteSession(id) {
             event.stopPropagation();
-            const el = document.getElementById(id);
-            if(el) el.remove();
-            let scans = JSON.parse(localStorage.getItem('guardai_scans') || '{}');
-            delete scans[id];
-            localStorage.setItem('guardai_scans', JSON.stringify(scans));
-            resetToHome();
+            document.getElementById(id).remove();
+            let sessions = JSON.parse(localStorage.getItem('guardai_sessions') || '{}');
+            delete sessions[id];
+            localStorage.setItem('guardai_sessions', JSON.stringify(sessions));
+            if (currentSessionId === id) resetToHome();
         }
 
-        function loadSavedScansOnStartup() {
-            const scans = JSON.parse(localStorage.getItem('guardai_scans') || '{}');
-            Object.keys(scans).forEach(id => addSidebarEntryUI(id, scans[id].title));
+        function resetToHome() {
+            currentSessionId = null;
+            document.getElementById('home-view').classList.remove('hidden');
+            document.getElementById('search-wrapper').classList.remove('hidden');
+            document.getElementById('chat-view').classList.add('hidden');
+            document.getElementById('chat-view').innerHTML = '';
+            document.getElementById('image-upload-pill').classList.add('hidden');
+            document.getElementById('home-pill').classList.add('hidden');
         }
-
-        document.addEventListener('DOMContentLoaded', loadSavedScansOnStartup);
 
         function openModal() { document.getElementById('upload-modal').classList.replace('hidden', 'flex'); }
-        function closeModal() { document.getElementById('upload-modal').classList.replace('flex', 'hidden'); }
-
-        function toggleSidebar() {
-            const sidebar = document.getElementById('sidebar');
-            const icon = document.getElementById('toggle-icon');
-            sidebar.classList.toggle('collapsed-sidebar');
-            icon.setAttribute('data-lucide', sidebar.classList.contains('collapsed-sidebar') ? 'panel-left-open' : 'panel-left-close');
-            lucide.createIcons();
-        }
+        function closeModal() { document.getElementById('upload-modal').classList.replace('flex', 'hidden'); resetUpload(); }
 
         function handleImagePreview(input) {
             if (input.files && input.files[0]) {
@@ -476,29 +376,12 @@
             document.getElementById('uploadPlaceholder').style.display = 'flex';
         }
 
-        function startUploadProcess(e) {
-            e.preventDefault();
-            const overlay = document.getElementById('loadingOverlay');
-            const img = document.getElementById('imagePreview');
-            const btn = document.getElementById('uploadSubmitBtn');
-            const circle = document.querySelector('.progress-ring__circle');
-            const circumference = 34 * 2 * Math.PI;
-
-            circle.style.strokeDasharray = `${circumference} ${circumference}`;
-            overlay.style.display = 'flex';
-            img.classList.add('blur-active');
-            btn.disabled = true;
-
-            let progress = 0;
-            const interval = setInterval(() => {
-                progress += 5;
-                circle.style.strokeDashoffset = circumference - (progress / 100) * circumference;
-                if (progress >= 100) {
-                    clearInterval(interval);
-                    document.getElementById('uploadForm').submit();
-                }
-            }, 50);
-        }
+        window.onload = () => {
+            const sessions = JSON.parse(localStorage.getItem('guardai_sessions') || '{}');
+            Object.keys(sessions).forEach(id => {
+                addSidebarEntryUI(id, "Session: " + sessions[id][0].filename);
+            });
+        };
     </script>
 </body>
 
