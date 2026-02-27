@@ -3,3 +3,7 @@ uploads/
 .venv/
 __pycache__/
 *.pyc
+.env
+*.db
+__pycache__/
+uploads/

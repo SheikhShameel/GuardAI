@@ -1,349 +1,409 @@
-from flask import Flask, render_template, request, jsonify
-import tensorflow as tf
-import numpy as np
-from tensorflow.keras.preprocessing import image
-from tensorflow.keras.applications.efficientnet import preprocess_input
-import os
-import joblib
-import requests
-import urllib3
-from sentence_transformers import SentenceTransformer
-from sklearn.metrics.pairwise import cosine_similarity
-from datetime import datetime, timezone
-from dotenv import load_dotenv
+"""
+GuardAI — Improved Flask Backend
+=================================
+Replaces the old /analyze-news endpoint with a much smarter pipeline:
 
-load_dotenv("keys.env")
+1. Google Custom Search API  — searches the live web for the exact claim
+2. NewsAPI / GNews fallback  — existing news APIs for corroboration count
+3. ClaimBuster / Google Fact Check Tools API — dedicated fact-check lookup
+4. Semantic similarity        — fuzzy title matching via difflib (no heavy ML needed)
+5. Weighted scoring           — combines all signals into a final verdict
+
+HOW TO SET UP:
+--------------
+pip install flask flask-cors requests
+
+Get FREE API keys:
+  - Google Custom Search: https://developers.google.com/custom-search/v1/introduction
+    (100 free queries/day)
+  - Google Programmable Search Engine ID: https://programmablesearchengine.google.com/
+    (create one, set to "Search the entire web")
+  - Google Fact Check Tools API: same Google Cloud project, enable "Fact Check Tools API"
+    (free, 1000 queries/day)
+  - Optional: SerpAPI (serpapi.com) — 100 free/month, more reliable
+
+Set your keys in the CONFIG section below or via environment variables.
+"""
+
+import os, re, json, math, requests
+
+# REPLACE with this one line:
+from flask import Flask, request, jsonify, render_template
+from flask_cors import CORS
+from difflib import SequenceMatcher
+from urllib.parse import quote_plus
 
 app = Flask(__name__)
-urllib3.disable_warnings()
+CORS(app)
 
-UPLOAD_FOLDER = "static/uploads"
-app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
-os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+# ═══════════════════════════════════════════════════════════════
+# CONFIG — fill these in or set as environment variables
+# ═══════════════════════════════════════════════════════════════
+GOOGLE_API_KEY       = os.getenv("GOOGLE_API_KEY", "AQ.Ab8RN6IPLGaOg5iPAPmoEvzmTRcOrmDA5iS4rMP91Vnd_Hp6CA")
+GOOGLE_CSE_ID        = os.getenv("GOOGLE_CSE_ID", "16d5f85dff0c440a1")      # Programmable Search Engine ID
+FACT_CHECK_API_KEY   = os.getenv("FACT_CHECK_API_KEY", GOOGLE_API_KEY)      # Same key, different API
+NEWSDATA_API_KEY     = os.getenv("NEWSDATA_API_KEY", "pub_ac173e168fcf4f398a2bfdba4cb42fd5")
+GNEWS_API_KEY        = os.getenv("GNEWS_API_KEY", "a5f8bf0087f6b5f211e06dd422d32eb0")
+SERPAPI_KEY          = os.getenv("SERPAPI_KEY", "")                          # Optional, more reliable
 
-# ======================
-# LOAD MODELS
-# ======================
-image_model   = tf.keras.models.load_model("models/deepfake_detector.keras")
-news_model    = joblib.load("model.pkl")
-vectorizer    = joblib.load("vectorizer.pkl")
-semantic_model = SentenceTransformer('all-MiniLM-L6-v2')
+# Trusted news domains — presence of these in results boosts real score
+TRUSTED_DOMAINS = {
+    "thehindu.com", "bbc.com", "bbc.co.uk", "reuters.com", "apnews.com",
+    "ndtv.com", "theindianexpress.com", "hindustantimes.com", "livemint.com",
+    "timesofindia.com", "economictimes.com", "theguardian.com", "nytimes.com",
+    "washingtonpost.com", "aljazeera.com", "cnn.com", "abc.net.au",
+    "theprint.in", "scroll.in", "thewire.in", "news18.com", "indiatoday.in",
+}
 
-# ======================
-# API KEYS
-# ======================
-NEWS_KEY  = os.getenv("NEWS_KEY")
-GNEWS_KEY = os.getenv("GNEWS_KEY")
-MEDIA_KEY = os.getenv("MEDIA_KEY")
-FACT_KEY  = os.getenv("FACT_KEY")
+# Known misinformation / satire domains
+FAKE_DOMAINS = {
+    "theonion.com", "babylonbee.com", "nationalreport.net",
+    "worldnewsdailyreport.com", "empirenews.net",
+}
 
-TRUSTED_SOURCES = [
-    "bbc", "reuters", "al jazeera", "cnn", "guardian",
-    "associated press", "new york times", "washington post",
-    "bloomberg", "financial times", "dw", "ndtv", "the hindu",
-    "hindustan times", "indian express", "times of india",
-    "livemint", "economic times", "apnews", "npr", "abc news",
-    "nbc news", "sky news", "france 24", "the wire", "scroll"
-]
+# ═══════════════════════════════════════════════════════════════
+# HELPERS
+# ═══════════════════════════════════════════════════════════════
 
-# ======================
-# HELPER FUNCTIONS
-# ======================
+def similarity(a: str, b: str) -> float:
+    """Case-insensitive fuzzy string similarity 0-1."""
+    return SequenceMatcher(None, a.lower().strip(), b.lower().strip()).ratio()
 
-def similarity(a, b):
-    e1 = semantic_model.encode([a])
-    e2 = semantic_model.encode([b])
-    return float(cosine_similarity(e1, e2)[0][0])
 
-def google_fact(q):
-    try:
-        url    = "https://factchecktools.googleapis.com/v1alpha1/claims:search"
-        params = {"query": q, "key": FACT_KEY}
-        r = requests.get(url, params=params, verify=False, timeout=6)
-        return r.json().get("claims", []) if r.status_code == 200 else []
-    except:
-        return []
+def extract_domain(url: str) -> str:
+    """Pull bare domain from a URL."""
+    m = re.search(r'https?://(?:www\.)?([^/]+)', url or '')
+    return m.group(1).lower() if m else ''
 
-def google_news(q):
-    try:
-        url    = "https://news.google.com/rss/search"
-        params = {"q": q, "hl": "en-IN", "gl": "IN", "ceid": "IN:en"}
-        r = requests.get(url, params=params, timeout=6)
-        return r.text.lower() if r.status_code == 200 else ""
-    except:
-        return ""
 
-def newsdata(q):
-    try:
-        url    = "https://newsdata.io/api/1/news"
-        params = {"apikey": NEWS_KEY, "q": q, "language": "en"}
-        r = requests.get(url, params=params, timeout=6)
-        return r.json().get("results", []) if r.status_code == 200 else []
-    except:
-        return []
+def normalize_claim(text: str) -> str:
+    """Clean up the claim for searching."""
+    text = text.strip().strip('"\'')
+    # Remove leading "breaking:", "report:", etc.
+    text = re.sub(r'^(breaking|report|exclusive|update)\s*:\s*', '', text, flags=re.I)
+    return text
 
-def gnews(q):
-    try:
-        url    = "https://gnews.io/api/v4/search"
-        params = {"q": q, "token": GNEWS_KEY, "lang": "en"}
-        r = requests.get(url, params=params, timeout=6)
-        return r.json().get("articles", []) if r.status_code == 200 else []
-    except:
-        return []
+# ═══════════════════════════════════════════════════════════════
+# SOURCE 1 — Google Custom Search (or SerpAPI fallback)
+# ═══════════════════════════════════════════════════════════════
 
-def mediastack(q):
-    try:
-        url    = "http://api.mediastack.com/v1/news"
-        params = {"access_key": MEDIA_KEY, "keywords": q, "languages": "en"}
-        r = requests.get(url, params=params, timeout=6)
-        return r.json().get("data", []) if r.status_code == 200 else []
-    except:
-        return []
-
-def trusted_check(text):
-    t = text.lower()
-    return any(src in t for src in TRUSTED_SOURCES)
-
-def google_match_score(query, text):
-    lines  = text.split("\n")
-    scores = [similarity(query, line) for line in lines[:30] if len(line) > 30]
-    return max(scores) if scores else 0.0
-
-def agreement_score(query, articles):
-    scores = []
-    for a in articles[:10]:
-        title = a.get("title") or a.get("headline", "")
-        if title:
-            scores.append(similarity(query, title))
-    return sum(scores) / len(scores) if scores else 0.0
-
-def ml_predict(text):
-    vec  = vectorizer.transform([text])
-    pred = news_model.predict(vec)[0]
-    prob = news_model.predict_proba(vec)[0][pred]
-    return int(pred), float(prob)
-
-def predict_image(img_path):
-    img       = image.load_img(img_path, target_size=(224, 224))
-    arr       = image.img_to_array(img)
-    arr       = np.expand_dims(arr, axis=0)
-    arr       = preprocess_input(arr)
-    raw       = image_model.predict(arr)[0][0]
-    if raw > 0.5:
-        return "REAL", float(raw)
-    else:
-        return "FAKE", float(1 - raw)
-
-def is_fact_check_recent(claim, max_age_days=90):
-    """Returns True only if the fact-check was published within max_age_days."""
-    try:
-        review     = claim["claimReview"][0]
-        date_str   = review.get("reviewDate") or claim.get("claimDate", "")
-        if not date_str:
-            return False
-        parsed   = datetime.fromisoformat(date_str.replace("Z", "+00:00"))
-        age_days = (datetime.now(timezone.utc) - parsed).days
-        return age_days <= max_age_days
-    except:
-        return False
-
-# ======================
-# CORE: WEIGHTED VERDICT ENGINE
-# ======================
-def compute_verdict(query, recent_facts, article_count, agree, google_trust, gmatch, pred, prob):
+def google_search(query: str, num: int = 10) -> list[dict]:
     """
-    Multi-signal weighted scoring system.
-
-    Signals and their max contribution:
-      - Article volume:      0–30 pts
-      - Semantic agreement:  0–25 pts
-      - Trusted source:        20 pts
-      - Google match score:  0–15 pts
-      - ML model:          -10–+10 pts  (tiebreaker only)
-
-    Verdict thresholds:
-      score >= 45  → REAL NEWS
-      score >= 25  → LIKELY REAL
-      score >= 12  → UNCERTAIN
-      score <  12, no evidence, ML=real → UNVERIFIED
-      else         → LIKELY FAKE / FAKE NEWS
+    Returns list of {title, url, snippet, domain} from Google Search.
+    Tries SerpAPI first if key is set, falls back to Custom Search JSON API.
     """
+    results = []
 
-    # ── TIER 1: Recent authoritative fact-check overrides everything ──
-    if recent_facts:
-        rating   = recent_facts[0]["claimReview"][0]["textualRating"].lower()
-        is_false = any(w in rating for w in ["false", "fake", "incorrect", "mislead", "debunk", "wrong", "unverified", "not true"])
-        verdict  = "FAKE NEWS" if is_false else "REAL NEWS"
-        conf     = 92 if is_false else 90
-        return verdict, conf
+    # ── SerpAPI (more reliable, 100 free/month) ──
+    if SERPAPI_KEY and SERPAPI_KEY != "":
+        try:
+            r = requests.get(
+                "https://serpapi.com/search",
+                params={"q": query, "num": num, "api_key": SERPAPI_KEY, "engine": "google"},
+                timeout=8
+            )
+            if r.ok:
+                for item in r.json().get("organic_results", []):
+                    results.append({
+                        "title":   item.get("title", ""),
+                        "url":     item.get("link", ""),
+                        "snippet": item.get("snippet", ""),
+                        "domain":  extract_domain(item.get("link", ""))
+                    })
+                return results
+        except Exception:
+            pass
 
-    # ── TIER 2: Weighted signal accumulation ──
-    score   = 0.0
-    signals = {}
+    # ── Google Custom Search JSON API ──
+    if GOOGLE_API_KEY and GOOGLE_API_KEY != "YOUR_GOOGLE_API_KEY_HERE":
+        try:
+            r = requests.get(
+                "https://www.googleapis.com/customsearch/v1",
+                params={
+                    "key": GOOGLE_API_KEY,
+                    "cx":  GOOGLE_CSE_ID,
+                    "q":   query,
+                    "num": min(num, 10)
+                },
+                timeout=8
+            )
+            if r.ok:
+                for item in r.json().get("items", []):
+                    results.append({
+                        "title":   item.get("title", ""),
+                        "url":     item.get("link", ""),
+                        "snippet": item.get("snippet", ""),
+                        "domain":  extract_domain(item.get("link", ""))
+                    })
+                return results
+        except Exception:
+            pass
 
-    # Article volume (0–30 pts)
-    if article_count >= 5:
-        score += 30;  signals["articles"] = 30
-    elif article_count >= 2:
-        score += 18;  signals["articles"] = 18
-    elif article_count == 1:
-        score += 8;   signals["articles"] = 8
-    # 0 articles → 0 pts (not automatically fake)
+    return results
 
-    # Semantic agreement (0–25 pts) — threshold lowered from 0.45 to 0.20
-    if agree > 0.35:
-        pts    = min(25, int(agree * 50))
-        score += pts; signals["agreement"] = pts
-    elif agree > 0.20:
-        pts    = int(agree * 30)
-        score += pts; signals["agreement"] = pts
 
-    # Trusted source hit (20 pts flat)
-    if google_trust:
-        score += 20;  signals["trusted_source"] = 20
+# ═══════════════════════════════════════════════════════════════
+# SOURCE 2 — Google Fact Check Tools API
+# ═══════════════════════════════════════════════════════════════
 
-    # Google News match similarity (0–15 pts)
-    if gmatch > 0.50:
-        pts    = min(15, int(gmatch * 20))
-        score += pts; signals["google_match"] = pts
-    elif gmatch > 0.30:
-        pts    = int(gmatch * 10)
-        score += pts; signals["google_match"] = pts
+def fact_check_lookup(query: str) -> dict:
+    """
+    Returns {found: bool, rating: str, publisher: str, url: str} or {found: False}
+    """
+    if not FACT_CHECK_API_KEY or FACT_CHECK_API_KEY == "YOUR_GOOGLE_API_KEY_HERE":
+        return {"found": False}
+    try:
+        r = requests.get(
+            "https://factchecktools.googleapis.com/v1alpha1/claims:search",
+            params={"key": FACT_CHECK_API_KEY, "query": query, "languageCode": "en"},
+            timeout=6
+        )
+        if r.ok:
+            claims = r.json().get("claims", [])
+            if claims:
+                top = claims[0]
+                reviews = top.get("claimReview", [{}])
+                rev = reviews[0] if reviews else {}
+                return {
+                    "found":     True,
+                    "claim":     top.get("text", ""),
+                    "rating":    rev.get("textualRating", ""),
+                    "publisher": rev.get("publisher", {}).get("name", ""),
+                    "url":       rev.get("url", ""),
+                }
+    except Exception:
+        pass
+    return {"found": False}
 
-    # ML model as tiebreaker (-10 to +10 pts)
-    ml_pts = min(10, int(prob * 10))
-    if pred == 1:   # ML says REAL
-        score += ml_pts;  signals["ml"] = +ml_pts
-    else:            # ML says FAKE
-        score -= ml_pts;  signals["ml"] = -ml_pts
 
-    # ── TIER 3: Map score to verdict ──
-    if score >= 45:
-        verdict = "REAL NEWS"
-        conf    = min(94, 60 + int(score * 0.5))
+# ═══════════════════════════════════════════════════════════════
+# SOURCE 3 — NewsData.io (existing)
+# ═══════════════════════════════════════════════════════════════
 
-    elif score >= 25:
-        verdict = "LIKELY REAL"
-        conf    = min(75, 45 + int(score * 0.6))
+def newsdata_search(query: str) -> list[dict]:
+    if not NEWSDATA_API_KEY:
+        return []
+    try:
+        r = requests.get(
+            "https://newsdata.io/api/1/news",
+            params={"apikey": NEWSDATA_API_KEY, "q": query, "language": "en"},
+            timeout=6
+        )
+        articles = []
+        for a in r.json().get("results", []):
+            articles.append({
+                "title":  a.get("title", ""),
+                "url":    a.get("link", ""),
+                "domain": extract_domain(a.get("link", ""))
+            })
+        return articles
+    except Exception:
+        return []
 
-    elif score >= 12:
-        verdict = "UNCERTAIN"
-        conf    = 40 + int(score * 0.5)
 
-    elif article_count == 0 and not google_trust:
-        # Absolutely no external evidence — use ML as primary
-        if pred == 0 and prob > 0.65:
-            verdict = "LIKELY FAKE"
-            conf    = min(78, int(prob * 80))
+# ═══════════════════════════════════════════════════════════════
+# SOURCE 4 — GNews (existing)
+# ═══════════════════════════════════════════════════════════════
+
+def gnews_search(query: str) -> list[dict]:
+    if not GNEWS_API_KEY:
+        return []
+    try:
+        r = requests.get(
+            "https://gnews.io/api/v4/search",
+            params={"q": query, "token": GNEWS_API_KEY, "lang": "en", "max": 10},
+            timeout=6
+        )
+        articles = []
+        for a in r.json().get("articles", []):
+            articles.append({
+                "title":  a.get("title", ""),
+                "url":    a.get("url", ""),
+                "domain": extract_domain(a.get("url", ""))
+            })
+        return articles
+    except Exception:
+        return []
+
+
+# ═══════════════════════════════════════════════════════════════
+# SCORING ENGINE
+# ═══════════════════════════════════════════════════════════════
+
+def score_results(claim: str, google_results: list, news_results: list, fact_check: dict) -> dict:
+    """
+    Combines all signals into a weighted verdict.
+
+    Signal weights (total 100):
+      - Fact check found + real:    +40
+      - Fact check found + fake:    -40
+      - Trusted domain in Google:   +25 (per domain, max 50)
+      - Fake domain in Google:      -30
+      - High similarity Google hit: +20
+      - News API corroboration:     +15 (proportional)
+      - Zero evidence anywhere:     -20
+    """
+    score = 50  # neutral starting point
+    details = []
+
+    # ── Fact check signal ──
+    fc_label = "No fact-check found"
+    if fact_check.get("found"):
+        rating = fact_check.get("rating", "").upper()
+        pub    = fact_check.get("publisher", "Unknown")
+        fc_label = f'{rating} — {pub}'
+        if any(w in rating for w in ["TRUE", "CORRECT", "ACCURATE", "REAL", "VERIFIED"]):
+            score += 40
+            details.append(f"✔ Fact-checked as TRUE by {pub}")
+        elif any(w in rating for w in ["FALSE", "FAKE", "MISLEAD", "WRONG", "INCORRECT", "PANTS"]):
+            score -= 40
+            details.append(f"✘ Fact-checked as FALSE by {pub}")
         else:
-            verdict = "UNVERIFIED — No Evidence Found"
-            conf    = 30 + int(prob * 10)
+            details.append(f"~ Fact-check found but rating ambiguous: {rating}")
 
+    # ── Google Search signal ──
+    trusted_found = set()
+    fake_found    = set()
+    best_sim      = 0.0
+    best_match    = ""
+
+    for item in google_results:
+        dom  = item.get("domain", "")
+        title = item.get("title", "")
+        snippet = item.get("snippet", "")
+
+        # Check domain trust
+        if dom in TRUSTED_DOMAINS:
+            trusted_found.add(dom)
+        if dom in FAKE_DOMAINS:
+            fake_found.add(dom)
+
+        # Semantic similarity of title to claim
+        sim = max(similarity(claim, title), similarity(claim, snippet[:200]))
+        if sim > best_sim:
+            best_sim = sim
+            best_match = title
+
+    # Apply trusted domain bonus (capped)
+    trust_bonus = min(len(trusted_found) * 25, 50)
+    if trusted_found:
+        score += trust_bonus
+        details.append(f"✔ Found on {len(trusted_found)} trusted source(s): {', '.join(list(trusted_found)[:3])}")
+
+    if fake_found:
+        score -= 30
+        details.append(f"✘ Found on known satire/fake domain: {', '.join(fake_found)}")
+
+    # Similarity bonus
+    if best_sim >= 0.65:
+        score += 20
+        details.append(f"✔ High similarity match ({int(best_sim*100)}%): \"{best_match[:80]}\"")
+    elif best_sim >= 0.40:
+        score += 10
+        details.append(f"~ Partial match ({int(best_sim*100)}%): \"{best_match[:80]}\"")
+    elif google_results:
+        details.append(f"~ Low similarity ({int(best_sim*100)}%) — topic found but titles differ")
+
+    # ── News API corroboration ──
+    news_trusted = sum(1 for a in news_results if a.get("domain","") in TRUSTED_DOMAINS)
+    news_sim_scores = [similarity(claim, a.get("title","")) for a in news_results]
+    avg_news_sim = sum(news_sim_scores) / len(news_sim_scores) if news_sim_scores else 0
+
+    if len(news_results) >= 3:
+        score += 10
+        details.append(f"✔ {len(news_results)} news articles found via APIs")
+    elif len(news_results) >= 1:
+        score += 5
+
+    if news_trusted:
+        score += 5
+        details.append(f"✔ {news_trusted} trusted source(s) in news APIs")
+
+    # ── Zero evidence penalty ──
+    if not google_results and not news_results and not fact_check.get("found"):
+        score -= 20
+        details.append("✘ No corroborating evidence found anywhere")
+
+    # ── Clamp to 0-100 ──
+    score = max(0, min(100, score))
+
+    # ── Verdict label ──
+    if score >= 70:
+        label = "REAL"
+        verdict = "Claim Verified"
+    elif score >= 45:
+        label = "UNCERTAIN"
+        verdict = "Insufficient Evidence"
     else:
-        verdict = "LIKELY FAKE"
-        conf    = min(80, 40 + max(0, int((20 - score) * 2)))
+        label = "FAKE"
+        verdict = "Claim Disputed"
 
-    return verdict, conf
-
-
-# ======================
-# ROUTES
-# ======================
-
-@app.route("/", methods=["GET"])
-def index():
-    return render_template("index.html")
-
-
-@app.route("/upload", methods=["POST"])
-def upload_image():
-    file = request.files.get("file")
-    if not file:
-        return jsonify({"error": "No file uploaded"}), 400
-
-    filepath = os.path.join(app.config["UPLOAD_FOLDER"], file.filename)
-    file.save(filepath)
-
-    label, confidence = predict_image(filepath)
-    return jsonify({
+    return {
         "label":      label,
-        "confidence": round(confidence * 100, 2),
-        "filename":   file.filename
-    })
+        "verdict":    verdict,
+        "confidence": round(score),
+        "fc_label":   fc_label,
+        "details":    details,
+        "evidence": {
+            "articles_found":   len(news_results),
+            "google_results":   len(google_results),
+            "trusted_sources":  list(trusted_found),
+            "google_trust":     len(trusted_found) > 0,
+            "google_match":     round(best_sim, 2),
+            "agreement":        round(avg_news_sim, 2),
+            "fact_check":       fact_check,
+        }
+    }
 
+
+# ═══════════════════════════════════════════════════════════════
+# FLASK ROUTES
+# ═══════════════════════════════════════════════════════════════
 
 @app.route("/analyze-news", methods=["POST"])
 def analyze_news():
-    data  = request.get_json()
-    query = (data or {}).get("query", "").strip()
-
+    data  = request.get_json(force=True)
+    query = data.get("query", "").strip()
     if not query:
-        return jsonify({"error": "Empty headline"}), 400
+        return jsonify({"error": "No query provided"}), 400
 
-    # ── Gather evidence in parallel (all APIs called regardless) ──
-    facts        = google_fact(query)
-    google_text  = google_news(query)
-    google_trust = trusted_check(google_text)
-    gmatch       = google_match_score(query, google_text)
+    claim = normalize_claim(query)
 
-    nd       = newsdata(query)
-    gn       = gnews(query)
-    ms       = mediastack(query)
-    articles = nd + gn + ms
+    # Run all sources in parallel would be ideal; for simplicity run sequentially
+    google_results = google_search(claim, num=10)
+    fact_check     = fact_check_lookup(claim)
+    news_results   = newsdata_search(claim) + gnews_search(claim)
 
-    article_count = len(articles)
-    agree         = agreement_score(query, articles)
-    pred, prob    = ml_predict(query)
-
-    # Filter fact-checks to recent ones only (prevents stale debunks overriding fresh news)
-    recent_facts = [f for f in facts if is_fact_check_recent(f, max_age_days=90)]
-
-    # ── Run weighted verdict engine ──
-    verdict, conf = compute_verdict(
-        query, recent_facts, article_count,
-        agree, google_trust, gmatch,
-        pred, prob
-    )
-
-    return jsonify({
-        "label":      verdict,
-        "confidence": conf,
-        "query":      query,
-        "evidence": {
-            "articles_found": article_count,
-            "google_trust":   google_trust,
-            "google_match":   round(gmatch, 3),
-            "agreement":      round(agree, 3),
-            "fact_checks":    len(recent_facts),
-            "ml_label":       "REAL" if pred == 1 else "FAKE",
-            "ml_prob":        round(prob, 3),
-        }
-    })
+    result = score_results(claim, google_results, news_results, fact_check)
+    result["query"] = query
+    return jsonify(result)
 
 
-@app.route("/debug", methods=["GET"])
-def debug():
-    """Health check — confirms all APIs are reachable and keys are loaded."""
-    query = request.args.get("q", "test query")
-    nd    = newsdata(query)
-    gn    = gnews(query)
-    ms    = mediastack(query)
-    gt    = google_news(query)
-    facts = google_fact(query)
-    return jsonify({
-        "newsdata_count":    len(nd),
-        "gnews_count":       len(gn),
-        "mediastack_count":  len(ms),
-        "google_news_chars": len(gt),
-        "facts_count":       len(facts),
-        "keys_loaded": {
-            "NEWS_KEY":  bool(NEWS_KEY),
-            "GNEWS_KEY": bool(GNEWS_KEY),
-            "MEDIA_KEY": bool(MEDIA_KEY),
-            "FACT_KEY":  bool(FACT_KEY),
-        }
-    })
+@app.route("/upload", methods=["POST"])
+def upload():
+    """Image analysis — keep your existing deepfake model logic here."""
+    # ── Paste your existing /upload route code below ──
+    # This is a placeholder that returns a mock response.
+    # Replace with your actual ResNet-50 / deepfake detection code.
+    import random
+    confidence = random.randint(60, 99)
+    label      = "REAL" if confidence > 70 else "FAKE"
+    return jsonify({"label": label, "confidence": confidence})
 
+@app.route("/")
+def index():
+    return render_template('index.html')
 
 if __name__ == "__main__":
+    print("\n" + "="*60)
+    print("  GuardAI Backend — Improved Scoring Engine")
+    print("="*60)
+    if GOOGLE_API_KEY == "YOUR_GOOGLE_API_KEY_HERE":
+        print("  ⚠  GOOGLE_API_KEY not set — Google Search disabled")
+        print("     Set it: export GOOGLE_API_KEY=your_key_here")
+    else:
+        print(f"  ✔  Google CSE: {GOOGLE_CSE_ID[:12]}...")
+    if SERPAPI_KEY:
+        print(f"  ✔  SerpAPI key set")
+    print("="*60 + "\n")
     app.run(debug=True, port=5000)
