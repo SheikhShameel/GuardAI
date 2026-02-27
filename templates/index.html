@@ -113,6 +113,28 @@
         <h3 class="text-[10px] uppercase tracking-widest text-gray-600 font-bold mb-3 px-2 sidebar-text">History</h3>
         <div id="recent-scans-list" class="space-y-1"></div>
     </nav>
+        </nav>
+
+    <!-- USER PROFILE -->
+    <div class="mt-auto pt-4 border-t border-white/5">
+        <div id="profileButton" onclick="toggleProfileMenu()" class="flex items-center gap-3 px-2 py-2 rounded-lg cursor-pointer hover:bg-white/5 transition-all">
+            <div class="w-8 h-8 rounded-full bg-gradient-to-tr from-purple-500 to-blue-500 flex items-center justify-center text-white text-xs font-bold">
+                U
+            </div>
+            <div class="sidebar-text">
+                <p class="text-xs text-gray-300 font-medium">User</p>
+                <p class="text-[10px] text-gray-600">View Profile</p>
+            </div>
+        </div>
+
+        <!-- LOGOUT CARD -->
+        <div id="profileMenu" class="hidden mt-3 bg-[#111] border border-white/10 rounded-xl p-3">
+            <button onclick="logoutUser()" class="w-full flex items-center gap-2 text-xs text-red-400 hover:text-red-300">
+                <i data-lucide="log-out" class="w-4 h-4"></i>
+                Logout
+            </button>
+        </div>
+    </div>
 </aside>
 
 <!-- MAIN -->
@@ -175,9 +197,6 @@
         </button>
     </div>
 
-    <button id="home-pill" onclick="resetToHome()" class="hidden home-btn-bottom" title="Back to Home">
-        <i data-lucide="arrow-left" class="w-4 h-4"></i>
-    </button>
 </main>
 
 <!-- UPLOAD MODAL -->
@@ -249,14 +268,12 @@ function _showChat() {
     document.getElementById('home-view').classList.add('hidden');
     const cv = document.getElementById('chat-view');
     cv.classList.remove('hidden'); cv.classList.add('flex');
-    document.getElementById('home-pill').classList.remove('hidden');
 }
 function resetToHome() {
     currentSessionId = null; currentMode = null;
     document.getElementById('home-view').classList.remove('hidden');
     const cv = document.getElementById('chat-view');
     cv.classList.add('hidden'); cv.classList.remove('flex'); cv.innerHTML = '';
-    document.getElementById('home-pill').classList.add('hidden');
     document.getElementById('text-bar').classList.add('hidden');
     document.getElementById('image-bar').classList.add('hidden');
 }
@@ -609,6 +626,14 @@ dz.addEventListener('drop', e => {
     const file = e.dataTransfer.files[0];
     if (file) { const dt = new DataTransfer(); dt.items.add(file); document.getElementById('fileInput').files = dt.files; handleImagePreview(document.getElementById('fileInput')); }
 });
+function toggleProfileMenu() {
+    const menu = document.getElementById('profileMenu');
+    menu.classList.toggle('hidden');
+}
+
+function logoutUser() {
+    window.location.href = "/logout";
+}
 window.onload = () => {
     const s = JSON.parse(localStorage.getItem('guardai_sessions') || '{}');
     Object.keys(s).forEach(id => {
