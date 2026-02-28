@@ -1,11 +1,13 @@
 """
 GuardAI — Flask Backend with OpenAI Integration
 """
+import os, re, json, math, requests, random, base64, uuid
 import os, re, json, math, requests, random, base64
 from datetime import timedelta
 from difflib import SequenceMatcher
 from urllib.parse import quote_plus
 from dotenv import load_dotenv
+
 
 load_dotenv()
 
@@ -600,22 +602,33 @@ def save_text_scan():
 @app.route("/save_image_scan", methods=["POST"])
 def save_image_scan():
     if "user_id" not in session:
-        return {"error": "Not logged in"}, 401
+        return jsonify({"error": "Not logged in"}), 401
+
     file = request.files["image"]
-    filename = secure_filename(file.filename)
+    original_name = secure_filename(file.filename)
+    
+    # Add unique prefix so same filename never overwrites a previous upload
+    unique_name = f"{uuid.uuid4().hex[:8]}_{original_name}"
+    
     os.makedirs(app.config["UPLOAD_FOLDER"], exist_ok=True)
-    path = os.path.join(app.config["UPLOAD_FOLDER"], filename)
+    path = os.path.join(app.config["UPLOAD_FOLDER"], unique_name)
     file.save(path)
+
     scan = Scan(
         user_id=session["user_id"],
         scan_type="image",
-        input_data=filename,
+        input_data=unique_name,
         result=request.form.get("result"),
-        confidence=float(request.form.get("confidence"))
+        confidence=float(request.form.get("confidence") or 0)
     )
     db.session.add(scan)
     db.session.commit()
-    return {"message": "Saved"}
+
+    # Return the actual saved path so frontend can use it
+    return jsonify({
+        "message": "Saved",
+        "file_path": "/static/uploads/" + unique_name
+    })
 
 @app.route("/my_scans")
 def my_scans():

@@ -11,7 +11,6 @@
         :root { --green:#22c55e; --orange:#f97316; --purple:#7c6af7; --red:#ef4444; }
         * { box-sizing:border-box; margin:0; padding:0; }
 
-        /* ── EXACT DUSK BACKGROUND FROM UPLOADED IMAGE ── */
         body {
             background: linear-gradient(
                 180deg,
@@ -42,7 +41,6 @@
             font-family:'DM Sans',sans-serif;
         }
 
-        /* Subtle noise/grain overlay for photo realism */
         body::after {
             content: '';
             position: fixed;
@@ -54,7 +52,6 @@
             opacity: 0.35;
         }
 
-        /* Frosted glass effect for sidebar and cards */
         .font-syne { font-family:'Syne',sans-serif; }
 
         .bg-sidebar {
@@ -81,7 +78,6 @@
         .no-scrollbar::-webkit-scrollbar { display:none; }
         .no-scrollbar { -ms-overflow-style:none; scrollbar-width:none; }
 
-        /* Main content area — glass overlay for readability */
         main {
             position: relative;
             z-index: 5;
@@ -111,7 +107,6 @@
         .verdict-fake    { --accent:#ef4444; --accent-dim:rgba(239,68,68,0.1);   --accent-glow:rgba(239,68,68,0.25); }
         .verdict-unknown { --accent:#f59e0b; --accent-dim:rgba(245,158,11,0.1);  --accent-glow:rgba(245,158,11,0.25); }
 
-        /* Cards get frosted glass treatment */
         .forensic-card-wrap {
             background: linear-gradient(160deg, rgba(15,20,32,0.88) 0%, rgba(10,14,24,0.92) 100%);
             backdrop-filter: blur(24px) saturate(1.5);
@@ -135,7 +130,6 @@
         .home-btn-bottom { position:fixed; bottom:26px; left:26px; width:44px; height:44px; background:#161616; border:1px solid rgba(255,255,255,0.1); border-radius:14px; display:flex; align-items:center; justify-content:center; color:#6b7280; transition:all 0.25s ease; z-index:40; cursor:pointer; }
         .home-btn-bottom:hover { background:#222; color:#e5e7eb; border-color:rgba(255,255,255,0.2); transform:scale(1.05); }
 
-        /* MODAL */
         .upload-modal-box {
             background: rgba(20, 24, 36, 0.92);
             backdrop-filter: blur(32px) saturate(1.5);
@@ -179,21 +173,18 @@
         .detail-text { font-size:11.5px; color:#9ca3af; line-height:1.6; }
         .trusted-pill { display:inline-block; background:rgba(34,197,94,0.1); border:1px solid rgba(34,197,94,0.2); color:#22c55e; font-size:9px; font-weight:700; padding:1px 7px; border-radius:20px; text-transform:uppercase; letter-spacing:0.05em; margin:2px 3px 2px 0; }
 
-        /* Home view cards get glass styling */
         .mode-card {
             backdrop-filter: blur(16px) saturate(1.4);
             -webkit-backdrop-filter: blur(16px) saturate(1.4);
             background: rgba(10, 15, 25, 0.55);
         }
 
-        /* Text/image bottom bars */
         .bottom-bar-glass {
             background: rgba(12, 16, 28, 0.78);
             backdrop-filter: blur(24px) saturate(1.4);
             -webkit-backdrop-filter: blur(24px) saturate(1.4);
         }
 
-        /* Badge pill */
         .status-badge-glass {
             background: rgba(255,255,255,0.07);
             backdrop-filter: blur(12px);
@@ -227,16 +218,12 @@
     <!-- USER PROFILE -->
     <div class="mt-auto pt-4 border-t border-white/5">
         <div id="profileButton" onclick="toggleProfileMenu()" class="flex items-center gap-3 px-2 py-2 rounded-lg cursor-pointer hover:bg-white/5 transition-all">
-            <div class="w-8 h-8 rounded-full bg-gradient-to-tr from-purple-500 to-blue-500 flex items-center justify-center text-white text-xs font-bold">
-                U
-            </div>
+            <div class="w-8 h-8 rounded-full bg-gradient-to-tr from-purple-500 to-blue-500 flex items-center justify-center text-white text-xs font-bold">U</div>
             <div class="sidebar-text">
                 <p class="text-xs text-gray-300 font-medium">User</p>
                 <p class="text-[10px] text-gray-600">View Profile</p>
             </div>
         </div>
-
-        <!-- LOGOUT CARD -->
         <div id="profileMenu" class="hidden mt-3 bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-3">
             <button onclick="logoutUser()" class="w-full flex items-center gap-2 text-xs text-red-400 hover:text-red-300">
                 <i data-lucide="log-out" class="w-4 h-4"></i>
@@ -410,6 +397,14 @@ async function startTextAnalysis() {
             fetch('/analyze-news', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ query }) }),
             sleep(1400)
         ]);
+
+        // ── FIX: check for non-JSON / auth redirect ──
+        const contentType = res.headers.get('content-type') || '';
+        if (!contentType.includes('application/json')) {
+            if (res.status === 401 || res.redirected) { window.location.href = '/'; return; }
+            throw new Error(`Server returned non-JSON response (status ${res.status})`);
+        }
+
         const result = await res.json();
         if (result.error) throw new Error(result.error);
         dots.remove();
@@ -549,13 +544,172 @@ function buildTextCard(data) {
     </div>`;
 }
 
-/* ══════════ IMAGE CARD ══════════ */
+/* ══════════ IMAGE CARD — FULLY USES BACKEND DATA ══════════ */
+function buildImageCard(data) {
+    const isReal = (data.label || '').toUpperCase() === 'REAL';
+    const rawLabel = (data.raw_label || data.label || '').toUpperCase();
+
+    // Determine color theme
+    let accent, vClass, tag, tagStyle;
+    if (isReal) {
+        accent = '#22c55e'; vClass = 'verdict-real';
+        tag = 'AUTHENTIC';
+        tagStyle = 'background:rgba(34,197,94,0.1);color:#22c55e;border:1px solid rgba(34,197,94,0.2)';
+    } else if (rawLabel === 'DEEPFAKE') {
+        accent = '#ef4444'; vClass = 'verdict-fake';
+        tag = 'DEEPFAKE';
+        tagStyle = 'background:rgba(239,68,68,0.1);color:#ef4444;border:1px solid rgba(239,68,68,0.2)';
+    } else if (rawLabel === 'MANIPULATED') {
+        accent = '#f97316'; vClass = 'verdict-fake';
+        tag = 'MANIPULATED';
+        tagStyle = 'background:rgba(249,115,22,0.1);color:#f97316;border:1px solid rgba(249,115,22,0.2)';
+    } else {
+        accent = '#ef4444'; vClass = 'verdict-fake';
+        tag = 'AI GENERATED';
+        tagStyle = 'background:rgba(239,68,68,0.1);color:#ef4444;border:1px solid rgba(239,68,68,0.2)';
+    }
+
+    const verdict = data.verdict || (isReal ? 'Content Verified' : 'Synthetic Media Detected');
+    const summary = data.summary || (isReal
+        ? 'Neural node consensus indicates this image exhibits authentic characteristics consistent with real-world capture.'
+        : 'Forensic analysis detected synthetic generation patterns. Neural signatures indicate AI-produced or manipulated media.');
+
+    const conf = Math.round(data.confidence || 0);
+    const r = 44, circ = +(2 * Math.PI * r).toFixed(2);
+
+    // Forensic scores from backend
+    const fs = data.forensic_score || {};
+    const texScore  = fs.texture_analysis     ?? null;
+    const lightScore= fs.lighting_consistency ?? null;
+    const faceScore = fs.facial_coherence     ?? null;
+    const noiseScore= fs.noise_pattern        ?? null;
+
+    function scoreBar(val, label) {
+        if (val === null) return '';
+        const c = val >= 70 ? '#22c55e' : val >= 40 ? '#f59e0b' : '#ef4444';
+        return `<div class="node-cell">
+            <p class="node-cell-label">${label}</p>
+            <p class="node-cell-value" style="color:${c}">${val}<span class="text-xs text-gray-600 font-normal">/100</span></p>
+            <div class="mt-2 h-1 bg-white/5 rounded-full overflow-hidden">
+                <div class="h-full bar-fill rounded-full" style="width:${val}%;background:${c};opacity:0.8"></div>
+            </div>
+        </div>`;
+    }
+
+    // Artifacts from backend
+    const artifacts = data.artifacts || [];
+    const artifactHtml = artifacts.length > 0
+        ? artifacts.map(a => `<span class="trusted-pill" style="background:rgba(239,68,68,0.1);color:#ef4444;border-color:rgba(239,68,68,0.2)">${escapeHtml(a)}</span>`).join('')
+        : '';
+
+    // Signals / details from backend
+    const details = data.details || [];
+    const detailHtml = details.map(d => {
+        const icon = d.startsWith('✔') ? '✔' : d.startsWith('✘') ? '✘' : '~';
+        const color = icon === '✔' ? '#22c55e' : icon === '✘' ? '#ef4444' : '#f59e0b';
+        const text = d.substring(2);
+        return `<div class="detail-line">
+            <span class="detail-icon" style="color:${color}">${icon}</span>
+            <span class="detail-text">${escapeHtml(text)}</span>
+        </div>`;
+    }).join('');
+
+    // Generation model / manipulation type pills
+    const metaPills = [
+        data.generation_model ? `<span class="trusted-pill" style="background:rgba(124,106,247,0.12);color:#a89bf7;border-color:rgba(124,106,247,0.3)">Model: ${escapeHtml(data.generation_model)}</span>` : '',
+        data.manipulation_type ? `<span class="trusted-pill" style="background:rgba(249,115,22,0.1);color:#f97316;border-color:rgba(249,115,22,0.2)">Type: ${escapeHtml(data.manipulation_type)}</span>` : '',
+        data.powered_by ? `<span class="trusted-pill" style="background:rgba(255,255,255,0.05);color:#555;border-color:rgba(255,255,255,0.08)">${escapeHtml(data.powered_by)}</span>` : ''
+    ].filter(Boolean).join('');
+
+    const hasForensicScores = texScore !== null || lightScore !== null || faceScore !== null || noiseScore !== null;
+
+    return `<div class="${vClass} forensic-card-wrap mb-2">
+        <div class="scan-overlay"></div><div class="glow-line"></div>
+        <div class="p-7">
+
+            <!-- Header -->
+            <div class="flex items-center justify-between mb-7">
+                <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 bg-gradient-to-tr from-green-400 to-blue-500 rounded-lg flex items-center justify-center">
+                        <i data-lucide="shield-check" class="w-4 h-4 text-white"></i>
+                    </div>
+                    <div>
+                        <p class="font-syne text-xs font-bold text-gray-500 uppercase tracking-widest">GuardAI Forensics</p>
+                        <p class="text-[10px] text-gray-700">GPT-4o Vision · Neural Analysis</p>
+                    </div>
+                </div>
+                <span class="text-[10px] font-bold uppercase tracking-widest px-3 py-1.5 rounded-full" style="${tagStyle}">${tag}</span>
+            </div>
+
+            <!-- Arc + verdict -->
+            <div class="flex items-center gap-7 mb-6">
+                <div class="relative shrink-0">
+                    <svg width="110" height="110" class="arc-ring">
+                        <circle cx="55" cy="55" r="${r}" fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="5"/>
+                        <circle cx="55" cy="55" r="${r}" fill="none" stroke="${accent}" stroke-width="5"
+                            stroke-dasharray="${circ}" stroke-dashoffset="${circ}" stroke-linecap="round"
+                            transform="rotate(-90 55 55)"
+                            style="transition:stroke-dashoffset 1.2s cubic-bezier(0.4,0,0.2,1) 0.2s;"
+                            id="arcCircle_${data.id}"/>
+                    </svg>
+                    <div class="absolute inset-0 flex flex-col items-center justify-center">
+                        <span class="count-up font-syne font-extrabold text-2xl" style="color:${accent}">0</span>
+                        <span class="text-[9px] text-gray-600 uppercase tracking-wider">%</span>
+                    </div>
+                </div>
+                <div>
+                    <p class="font-syne text-2xl font-extrabold text-white mb-2 leading-tight">${escapeHtml(verdict)}</p>
+                    <p class="text-xs text-gray-500 leading-relaxed max-w-xs">${escapeHtml(summary)}</p>
+                    ${metaPills ? `<div class="mt-3 flex flex-wrap gap-1">${metaPills}</div>` : ''}
+                </div>
+            </div>
+
+            <!-- Confidence bar -->
+            <div class="flex justify-between text-[9px] text-gray-600 uppercase tracking-wider mb-1.5">
+                <span>Confidence Signal</span><span>${conf}%</span>
+            </div>
+            <div class="h-1 bg-white/5 rounded-full overflow-hidden mb-5">
+                <div class="h-full bar-fill rounded-full" style="width:${conf}%;background:${accent};opacity:0.9"></div>
+            </div>
+
+            <!-- Forensic Score Grid -->
+            ${hasForensicScores ? `
+            <div class="grid grid-cols-2 gap-3 mb-5">
+                ${scoreBar(texScore,   'Texture Analysis')}
+                ${scoreBar(lightScore, 'Lighting Consistency')}
+                ${scoreBar(faceScore,  'Facial Coherence')}
+                ${scoreBar(noiseScore, 'Noise Pattern')}
+            </div>` : ''}
+
+            <!-- Artifacts -->
+            ${artifactHtml ? `
+            <div style="background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:12px 14px;margin-bottom:14px;">
+                <p class="text-[9px] uppercase tracking-widest text-gray-600 font-bold mb-2">Detected Artifacts</p>
+                <div class="flex flex-wrap gap-1">${artifactHtml}</div>
+            </div>` : ''}
+
+            <!-- Signals -->
+            ${detailHtml ? `
+            <div style="background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:14px 16px;">
+                <div class="flex items-center gap-2 mb-3">
+                    <div class="w-1.5 h-1.5 rounded-full" style="background:${accent}"></div>
+                    <p class="text-[9px] uppercase tracking-widest text-gray-600 font-bold">Forensic Signals</p>
+                </div>
+                ${detailHtml}
+            </div>` : ''}
+
+        </div>
+        <div class="glow-line" style="opacity:0.15"></div>
+    </div>`;
+}
+
+/* ══════════ IMAGE FLOW ══════════ */
 async function renderImageFlow(data) {
     const chat = document.getElementById('chat-view');
     const bubble = document.createElement('div');
     bubble.className = 'user-message-bubble'; bubble.style.alignSelf = 'flex-end';
     bubble.innerHTML = `<img src="${data.imgData}" class="rounded-xl w-full object-cover max-h-52">
-        <p class="text-[10px] text-gray-600 mt-2 px-1 flex items-center gap-1"><i data-lucide="image" class="w-3 h-3"></i> ${data.filename}</p>`;
+        <p class="text-[10px] text-gray-600 mt-2 px-1 flex items-center gap-1"><i data-lucide="image" class="w-3 h-3"></i> ${escapeHtml(data.filename)}</p>`;
     chat.appendChild(bubble); lucide.createIcons();
     chat.scrollTo({ top: chat.scrollHeight, behavior: 'smooth' });
     await sleep(380);
@@ -570,50 +724,6 @@ async function renderImageFlow(data) {
     chat.scrollTo({ top: chat.scrollHeight, behavior: 'smooth' });
     setTimeout(() => triggerArc(data.id, data.confidence), 80);
     animateCountUp(wrap.querySelector('.count-up'), 0, data.confidence, 1000);
-}
-
-function buildImageCard(data) {
-    const isReal = data.label.toUpperCase() === 'REAL';
-    const vClass = isReal ? 'verdict-real' : 'verdict-fake';
-    const accent = isReal ? '#22c55e' : '#ef4444';
-    const tag = isReal ? 'AUTHENTIC' : 'SYNTHETIC';
-    const tagStyle = isReal ? 'background:rgba(34,197,94,0.1);color:#22c55e;border:1px solid rgba(34,197,94,0.2)' : 'background:rgba(239,68,68,0.1);color:#ef4444;border:1px solid rgba(239,68,68,0.2)';
-    const verdict = isReal ? 'Content Verified' : 'Deepfake Detected';
-    const desc = isReal ? 'Neural node consensus indicates this image exhibits authentic characteristics consistent with real-world capture.' : 'Forensic analysis detected synthetic generation patterns. Neural signatures indicate AI-produced or manipulated media.';
-    const r = 44, circ = +(2 * Math.PI * r).toFixed(2);
-    return `<div class="${vClass} forensic-card-wrap mb-2">
-        <div class="scan-overlay"></div><div class="glow-line"></div>
-        <div class="p-7">
-            <div class="flex items-center justify-between mb-7">
-                <div class="flex items-center gap-3">
-                    <div class="w-8 h-8 bg-gradient-to-tr from-green-400 to-blue-500 rounded-lg flex items-center justify-center"><i data-lucide="shield-check" class="w-4 h-4 text-white"></i></div>
-                    <div><p class="font-syne text-xs font-bold text-gray-500 uppercase tracking-widest">GuardAI Forensics</p><p class="text-[10px] text-gray-700">Image Neural Analysis</p></div>
-                </div>
-                <span class="text-[10px] font-bold uppercase tracking-widest px-3 py-1.5 rounded-full" style="${tagStyle}">${tag}</span>
-            </div>
-            <div class="flex items-center gap-7 mb-7">
-                <div class="relative shrink-0">
-                    <svg width="110" height="110" class="arc-ring">
-                        <circle cx="55" cy="55" r="${r}" fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="5"/>
-                        <circle cx="55" cy="55" r="${r}" fill="none" stroke="${accent}" stroke-width="5" stroke-dasharray="${circ}" stroke-dashoffset="${circ}" stroke-linecap="round" transform="rotate(-90 55 55)" style="transition:stroke-dashoffset 1.2s cubic-bezier(0.4,0,0.2,1) 0.2s;" id="arcCircle_${data.id}"/>
-                    </svg>
-                    <div class="absolute inset-0 flex flex-col items-center justify-center">
-                        <span class="count-up font-syne font-extrabold text-2xl" style="color:${accent}">0</span>
-                        <span class="text-[9px] text-gray-600 uppercase tracking-wider">%</span>
-                    </div>
-                </div>
-                <div><p class="font-syne text-2xl font-extrabold text-white mb-2 leading-tight">${verdict}</p><p class="text-xs text-gray-500 leading-relaxed max-w-xs">${desc}</p></div>
-            </div>
-            <div class="grid grid-cols-3 gap-3 mb-5">
-                <div class="node-cell text-center"><p class="node-cell-label">Confidence</p><p class="node-cell-value" style="color:${accent}">${data.confidence}%</p></div>
-                <div class="node-cell text-center"><p class="node-cell-label">Neural Model</p><p class="node-cell-value text-sm">ResNet-50</p></div>
-                <div class="node-cell text-center"><p class="node-cell-label">Status</p><p class="node-cell-value text-sm">${isReal ? 'Clear' : 'Flagged'}</p></div>
-            </div>
-            <div class="flex justify-between text-[9px] text-gray-600 uppercase tracking-wider mb-2"><span>Confidence Signal</span><span>${data.confidence}%</span></div>
-            <div class="h-1 bg-white/5 rounded-full overflow-hidden"><div class="h-full bar-fill rounded-full" style="width:${data.confidence}%;background:${accent};opacity:0.9"></div></div>
-        </div>
-        <div class="glow-line" style="opacity:0.15"></div>
-    </div>`;
 }
 
 /* ══════════ UTILITIES ══════════ */
@@ -633,39 +743,118 @@ function animateCountUp(el, from, to, duration) {
     })(start);
 }
 
-/* ══════════ IMAGE SUBMIT ══════════ */
+
+/* IMAGE SUBMIT */
 async function submitImageAnalysis() {
     const fi = document.getElementById('fileInput');
     if (!fi.files[0]) { fi.click(); return; }
     const overlay = document.getElementById('loadingOverlay'), btn = document.getElementById('analyzeBtn');
     overlay.style.display = 'flex'; btn.disabled = true;
-    const imgData = document.getElementById('imagePreview').src, filename = fi.files[0].name;
-    const formData = new FormData(); formData.append('file', fi.files[0]);
+    const filename = fi.files[0].name;
+
     try {
-        const res = await fetch('/upload', { method:'POST', body: formData });
+        // STEP 1: Run forensic analysis
+        const analysisForm = new FormData();
+        analysisForm.append('file', fi.files[0]);
+        const res = await fetch('/upload', { method: 'POST', body: analysisForm });
+
+        const contentType = res.headers.get('content-type') || '';
+        if (!contentType.includes('application/json')) {
+            if (res.status === 401 || res.redirected) { window.location.href = '/'; return; }
+            throw new Error(`Server error (HTTP ${res.status}). Check Flask is running and OPENAI_API_KEY is set.`);
+        }
         const result = await res.json();
-        const data = { ...result, imgData, filename, type:'image', id: Date.now() };
-        closeModal(); saveSession(data, 'Img: ' + filename);
+        if (result.error) throw new Error(result.error);
+
+        // STEP 2: Save image + result to DB via /save_image_scan
+        const saveForm = new FormData();
+        saveForm.append('image', fi.files[0]);
+        saveForm.append('result', result.label || 'UNKNOWN');
+        saveForm.append('confidence', result.confidence || 0);
+
+        let imgServerPath = null;
+        try {
+            const saveRes = await fetch('/save_image_scan', { method: 'POST', body: saveForm });
+            if (saveRes.ok) {
+                const saveData = await saveRes.json();
+                // Use the actual saved filename returned from backend (has unique prefix)
+                imgServerPath = saveData.file_path || ('/static/uploads/' + filename);
+            }
+        } catch (saveErr) {
+            console.warn('Could not save image to DB:', saveErr);
+        }
+
+        // STEP 3: Use server path as imgData — no base64, no quota issues
+        const data = {
+            ...result,
+            imgData: imgServerPath,
+            filename,
+            type: 'image',
+            id: Date.now()
+        };
+
+        closeModal();
+        saveSession(data, 'Img: ' + filename);
         switchToImageMode();
         await renderImageFlow(data);
         setTimeout(() => triggerArc(data.id, data.confidence), 100);
-    } catch { alert('Forensic Node Error: Connection failed.'); }
-    finally { overlay.style.display = 'none'; btn.disabled = false; }
+
+    } catch (err) {
+        closeModal();
+        switchToImageMode();
+        const chat = document.getElementById('chat-view');
+        const errEl = document.createElement('div');
+        errEl.className = 'forensic-response';
+        errEl.innerHTML = `<div class="forensic-card-wrap verdict-fake mb-2" style="--accent:#ef4444;--accent-dim:rgba(239,68,68,0.08);--accent-glow:rgba(239,68,68,0.2)">
+            <div class="glow-line"></div>
+            <div class="p-7 flex items-center gap-4">
+                <i data-lucide="wifi-off" class="w-8 h-8 text-red-500 shrink-0"></i>
+                <div>
+                    <p class="font-syne font-bold text-white mb-1">Forensic Node Error</p>
+                    <p class="text-xs text-gray-500">Image analysis failed. Check your OpenAI API key and that Flask is running.</p>
+                    <p class="text-[10px] text-red-500/70 mt-2 font-mono">${escapeHtml(err.message)}</p>
+                </div>
+            </div>
+            <div class="glow-line" style="opacity:0.15"></div>
+        </div>`;
+        chat.appendChild(errEl);
+        lucide.createIcons();
+        chat.scrollTo({ top: chat.scrollHeight, behavior: 'smooth' });
+    } finally {
+        overlay.style.display = 'none';
+        btn.disabled = false;
+    }
 }
 
 /* ══════════ SESSIONS ══════════ */
 function saveSession(data, title) {
     if (!currentSessionId) { currentSessionId = 'session-' + Date.now(); addSidebarEntry(currentSessionId, title, data.type); }
-    let s = JSON.parse(localStorage.getItem('guardai_sessions') || '{}');
-    if (!s[currentSessionId]) s[currentSessionId] = [];
-    s[currentSessionId].push(data);
-    localStorage.setItem('guardai_sessions', JSON.stringify(s));
+
+    // imgData is now a server path like /static/uploads/filename.jpg — safe to store
+    const toSave = { ...data };
+
+    try {
+        let s = JSON.parse(localStorage.getItem('guardai_sessions') || '{}');
+        if (!s[currentSessionId]) s[currentSessionId] = [];
+        s[currentSessionId].push(toSave);
+        localStorage.setItem('guardai_sessions', JSON.stringify(s));
+    } catch (e) {
+        // If still over quota, clear old sessions and try once more
+        console.warn('localStorage quota hit — clearing old sessions');
+        try {
+            localStorage.removeItem('guardai_sessions');
+            const fresh = { [currentSessionId]: [toSave] };
+            localStorage.setItem('guardai_sessions', JSON.stringify(fresh));
+        } catch (e2) {
+            console.warn('localStorage unavailable — session will not persist');
+        }
+    }
 }
 function addSidebarEntry(id, title, type) {
     const list = document.getElementById('recent-scans-list'), icon = type === 'image' ? 'image' : 'file-text';
     const div = document.createElement('div');
     div.id = id; div.className = 'group flex items-center justify-between gap-2 px-2 py-2 hover:bg-white/5 rounded-lg cursor-pointer';
-    div.innerHTML = `<div class="flex items-center gap-2 truncate flex-1" onclick="loadSession('${id}')"><i data-lucide="${icon}" class="w-4 h-4 opacity-30 shrink-0"></i><span class="truncate text-[11px] text-gray-500 sidebar-text">${title}</span></div><button onclick="event.stopPropagation();deleteSession('${id}')" class="opacity-0 group-hover:opacity-100 p-1 hover:text-red-400 sidebar-text"><i data-lucide="trash-2" class="w-3 h-3"></i></button>`;
+    div.innerHTML = `<div class="flex items-center gap-2 truncate flex-1" onclick="loadSession('${id}')"><i data-lucide="${icon}" class="w-4 h-4 opacity-30 shrink-0"></i><span class="truncate text-[11px] text-gray-500 sidebar-text">${escapeHtml(title)}</span></div><button onclick="event.stopPropagation();deleteSession('${id}')" class="opacity-0 group-hover:opacity-100 p-1 hover:text-red-400 sidebar-text"><i data-lucide="trash-2" class="w-3 h-3"></i></button>`;
     list.prepend(div); lucide.createIcons();
 }
 function loadSession(id) {
@@ -677,7 +866,10 @@ function loadSession(id) {
     s[id].forEach(item => {
         if (item.type === 'image') {
             const b = document.createElement('div'); b.className = 'user-message-bubble'; b.style.alignSelf = 'flex-end';
-            b.innerHTML = `<img src="${item.imgData}" class="rounded-xl w-full object-cover max-h-52"><p class="text-[10px] text-gray-600 mt-2 px-1">${item.filename}</p>`;
+            const imgHtml = item.imgData
+                ? `<img src="${item.imgData}" class="rounded-xl w-full object-cover max-h-52">`
+                : `<div class="rounded-xl w-full flex items-center justify-center bg-white/5 border border-white/10" style="height:60px"><span class="text-[10px] text-gray-600">📷 Image not stored</span></div>`;
+            b.innerHTML = `${imgHtml}<p class="text-[10px] text-gray-600 mt-2 px-1">${escapeHtml(item.filename || 'image')}</p>`;
             chat.appendChild(b);
             const c = document.createElement('div'); c.className = 'forensic-response'; c.innerHTML = buildImageCard(item);
             chat.appendChild(c);
@@ -705,7 +897,11 @@ function closeModal() { document.getElementById('upload-modal').classList.replac
 function handleImagePreview(input) {
     if (input.files?.[0]) {
         const reader = new FileReader();
-        reader.onload = e => { const p = document.getElementById('imagePreview'); p.src = e.target.result; p.style.display = 'block'; document.getElementById('uploadPlaceholder').style.display = 'none'; };
+        reader.onload = e => {
+            const p = document.getElementById('imagePreview');
+            p.src = e.target.result; p.style.display = 'block';
+            document.getElementById('uploadPlaceholder').style.display = 'none';
+        };
         reader.readAsDataURL(input.files[0]);
         document.getElementById('fileLabel').textContent = input.files[0].name;
         document.getElementById('fileLabel').style.color = '#ccc';
@@ -727,17 +923,37 @@ dz.addEventListener('drop', e => {
     if (file) { const dt = new DataTransfer(); dt.items.add(file); document.getElementById('fileInput').files = dt.files; handleImagePreview(document.getElementById('fileInput')); }
 });
 function toggleProfileMenu() {
-    const menu = document.getElementById('profileMenu');
-    menu.classList.toggle('hidden');
+    document.getElementById('profileMenu').classList.toggle('hidden');
 }
 function logoutUser() {
     window.location.href = "/logout";
 }
 window.onload = () => {
+    // One-time migration: clear any old sessions with base64 imgData
+    try {
+        const raw = localStorage.getItem('guardai_sessions');
+        if (raw) {
+            const s = JSON.parse(raw);
+            let cleaned = false;
+            Object.values(s).forEach(items => {
+                items.forEach(item => {
+                    if (item.imgData && item.imgData.startsWith('data:')) {
+                        item.imgData = null; // wipe old base64, server path not recoverable
+                        cleaned = true;
+                    }
+                });
+            });
+            if (cleaned) localStorage.setItem('guardai_sessions', JSON.stringify(s));
+        }
+    } catch(e) {
+        localStorage.removeItem('guardai_sessions');
+    }
+
     const s = JSON.parse(localStorage.getItem('guardai_sessions') || '{}');
     Object.keys(s).forEach(id => {
         const first = s[id][0];
-        addSidebarEntry(id, first.type === 'image' ? 'Img: ' + first.filename : 'Claim: ' + first.query?.substring(0,12), first.type);
+        if (!first) return;
+        addSidebarEntry(id, first.type === 'image' ? 'Img: ' + (first.filename || 'image') : 'Claim: ' + (first.query?.substring(0,12) || ''), first.type);
     });
 };
 </script>
