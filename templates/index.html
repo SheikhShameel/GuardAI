@@ -3,20 +3,76 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GuardAI - Unified Forensic Intelligence</title>
+    <title>GLARE AI - Generative Lie And Reality Evaluator</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,700;1,400&family=Syne:wght@700;800&display=swap" rel="stylesheet">
     <style>
         :root { --green:#22c55e; --orange:#f97316; --purple:#7c6af7; --red:#ef4444; }
         * { box-sizing:border-box; margin:0; padding:0; }
-        body { background-color:#080808; color:#9ca3af; font-family:'DM Sans',sans-serif; }
+
+        /* ── EXACT DUSK BACKGROUND FROM UPLOADED IMAGE ── */
+        body {
+            background: linear-gradient(
+                180deg,
+                #1a2a35 0%,
+                #1e2d40 8%,
+                #1c3045 15%,
+                #1a3252 22%,
+                #1d3060 30%,
+                #1e2d68 37%,
+                #22306a 43%,
+                #2a3260 50%,
+                #3a3258 57%,
+                #4a3250 63%,
+                #5c3448 68%,
+                #703845 72%,
+                #843d40 76%,
+                #9a4238 80%,
+                #b04a2e 84%,
+                #c05228 88%,
+                #cc5e24 91%,
+                #d46820 94%,
+                #d87018 97%,
+                #da7215 100%
+            );
+            background-attachment: fixed;
+            min-height: 100vh;
+            color:#9ca3af;
+            font-family:'DM Sans',sans-serif;
+        }
+
+        /* Subtle noise/grain overlay for photo realism */
+        body::after {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+            background-size: 180px 180px;
+            pointer-events: none;
+            z-index: 0;
+            opacity: 0.35;
+        }
+
+        /* Frosted glass effect for sidebar and cards */
         .font-syne { font-family:'Syne',sans-serif; }
-        .bg-sidebar { background-color:#0a0a0a; }
+
+        .bg-sidebar {
+            background: rgba(10, 15, 25, 0.72);
+            backdrop-filter: blur(28px) saturate(1.4);
+            -webkit-backdrop-filter: blur(28px) saturate(1.4);
+        }
+
         .card-gradient-green { background:linear-gradient(135deg,rgba(34,197,94,0.08) 0%,rgba(0,0,0,0) 100%); }
         .card-gradient-orange { background:linear-gradient(135deg,rgba(249,115,22,0.08) 0%,rgba(0,0,0,0) 100%); }
-        .border-subtle { border-color:rgba(255,255,255,0.08); }
-        #sidebar { transition:width 0.3s cubic-bezier(0.4,0,0.2,1); overflow-x:hidden; }
+        .border-subtle { border-color:rgba(255,255,255,0.10); }
+
+        #sidebar {
+            transition:width 0.3s cubic-bezier(0.4,0,0.2,1);
+            overflow-x:hidden;
+            position: relative;
+            z-index: 10;
+        }
         .collapsed-sidebar { width:80px !important; }
         .sidebar-text { transition:opacity 0.2s ease; opacity:1; }
         .collapsed-sidebar .sidebar-text { opacity:0; display:none; }
@@ -25,14 +81,27 @@
         .no-scrollbar::-webkit-scrollbar { display:none; }
         .no-scrollbar { -ms-overflow-style:none; scrollbar-width:none; }
 
-        .thinking-bubble { display:flex; align-items:center; gap:6px; padding:14px 20px; background:#111; border:1px solid rgba(255,255,255,0.07); border-radius:20px 20px 20px 4px; width:fit-content; }
+        /* Main content area — glass overlay for readability */
+        main {
+            position: relative;
+            z-index: 5;
+        }
+        main::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.18);
+            pointer-events: none;
+        }
+
+        .thinking-bubble { display:flex; align-items:center; gap:6px; padding:14px 20px; background:rgba(15,20,30,0.75); backdrop-filter:blur(16px); border:1px solid rgba(255,255,255,0.10); border-radius:20px 20px 20px 4px; width:fit-content; }
         .thinking-dot { width:7px; height:7px; border-radius:50%; background:#333; animation:think 1.4s infinite ease-in-out; }
         .thinking-dot:nth-child(2) { animation-delay:0.2s; }
         .thinking-dot:nth-child(3) { animation-delay:0.4s; }
         @keyframes think { 0%,80%,100%{background:#333;transform:scale(1)} 40%{background:var(--purple);transform:scale(1.3)} }
 
-        .user-message-bubble { align-self:flex-end; max-width:300px; background:#141414; border:1px solid rgba(255,255,255,0.08); border-radius:20px 20px 4px 20px; padding:10px; animation:slideInRight 0.45s cubic-bezier(0.34,1.56,0.64,1) both; }
-        .text-claim { align-self:flex-end; max-width:380px; background:#141414; border:1px solid rgba(255,255,255,0.08); border-radius:20px 20px 4px 20px; padding:14px 18px; animation:slideInRight 0.45s cubic-bezier(0.34,1.56,0.64,1) both; }
+        .user-message-bubble { align-self:flex-end; max-width:300px; background:rgba(20,25,40,0.80); backdrop-filter:blur(16px); border:1px solid rgba(255,255,255,0.10); border-radius:20px 20px 4px 20px; padding:10px; animation:slideInRight 0.45s cubic-bezier(0.34,1.56,0.64,1) both; }
+        .text-claim { align-self:flex-end; max-width:380px; background:rgba(20,25,40,0.80); backdrop-filter:blur(16px); border:1px solid rgba(255,255,255,0.10); border-radius:20px 20px 4px 20px; padding:14px 18px; animation:slideInRight 0.45s cubic-bezier(0.34,1.56,0.64,1) both; }
         @keyframes slideInRight { from{opacity:0;transform:translateX(28px) scale(0.95)} to{opacity:1;transform:translateX(0) scale(1)} }
 
         .forensic-response { animation:revealCard 0.55s cubic-bezier(0.34,1.46,0.64,1) both; }
@@ -42,25 +111,46 @@
         .verdict-fake    { --accent:#ef4444; --accent-dim:rgba(239,68,68,0.1);   --accent-glow:rgba(239,68,68,0.25); }
         .verdict-unknown { --accent:#f59e0b; --accent-dim:rgba(245,158,11,0.1);  --accent-glow:rgba(245,158,11,0.25); }
 
-        .forensic-card-wrap { background:linear-gradient(160deg,#131313 0%,#0c0c0c 100%); border:1px solid rgba(255,255,255,0.06); border-radius:24px; overflow:hidden; box-shadow:0 40px 80px rgba(0,0,0,0.6); position:relative; }
+        /* Cards get frosted glass treatment */
+        .forensic-card-wrap {
+            background: linear-gradient(160deg, rgba(15,20,32,0.88) 0%, rgba(10,14,24,0.92) 100%);
+            backdrop-filter: blur(24px) saturate(1.5);
+            -webkit-backdrop-filter: blur(24px) saturate(1.5);
+            border:1px solid rgba(255,255,255,0.08);
+            border-radius:24px;
+            overflow:hidden;
+            box-shadow:0 40px 80px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.04) inset;
+            position:relative;
+        }
         .forensic-card-wrap::before { content:''; position:absolute; inset:0; background:radial-gradient(ellipse at 0% 0%,var(--accent-dim) 0%,transparent 55%); pointer-events:none; }
         .glow-line { height:1px; width:100%; background:linear-gradient(90deg,transparent 0%,var(--accent) 50%,transparent 100%); opacity:0.4; }
         .verdict-score { font-family:'Syne',sans-serif; font-weight:800; font-size:80px; line-height:1; letter-spacing:-4px; color:var(--accent); text-shadow:0 0 50px var(--accent-glow); }
         .arc-ring { filter:drop-shadow(0 0 8px var(--accent-glow)); }
-        .node-cell { background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.05); border-radius:14px; padding:14px; transition:background 0.2s; }
-        .node-cell:hover { background:rgba(255,255,255,0.05); }
+        .node-cell { background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.07); border-radius:14px; padding:14px; transition:background 0.2s; }
+        .node-cell:hover { background:rgba(255,255,255,0.07); }
         .node-cell-label { font-size:9px; text-transform:uppercase; letter-spacing:0.1em; color:#444; margin-bottom:5px; }
         .node-cell-value { font-size:15px; font-weight:700; color:#e5e7eb; }
-        .scan-overlay { position:absolute; inset:0; pointer-events:none; background:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(255,255,255,0.008) 3px,rgba(255,255,255,0.008) 4px); border-radius:24px; }
+        .scan-overlay { position:absolute; inset:0; pointer-events:none; background:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(255,255,255,0.006) 3px,rgba(255,255,255,0.006) 4px); border-radius:24px; }
 
         .home-btn-bottom { position:fixed; bottom:26px; left:26px; width:44px; height:44px; background:#161616; border:1px solid rgba(255,255,255,0.1); border-radius:14px; display:flex; align-items:center; justify-content:center; color:#6b7280; transition:all 0.25s ease; z-index:40; cursor:pointer; }
         .home-btn-bottom:hover { background:#222; color:#e5e7eb; border-color:rgba(255,255,255,0.2); transform:scale(1.05); }
 
-        .upload-modal-box { background:#181818; border:1px solid rgba(255,255,255,0.08); border-radius:20px; padding:28px; width:340px; position:relative; box-shadow:0 40px 80px rgba(0,0,0,0.7); }
+        /* MODAL */
+        .upload-modal-box {
+            background: rgba(20, 24, 36, 0.92);
+            backdrop-filter: blur(32px) saturate(1.5);
+            -webkit-backdrop-filter: blur(32px) saturate(1.5);
+            border:1px solid rgba(255,255,255,0.10);
+            border-radius:20px;
+            padding:28px;
+            width:340px;
+            position:relative;
+            box-shadow:0 40px 80px rgba(0,0,0,0.7);
+        }
         .upload-close-btn { position:absolute; top:14px; right:14px; width:28px; height:28px; border-radius:50%; background:#2a2a2a; border:none; color:#777; font-size:13px; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:background 0.2s,color 0.2s; }
         .upload-close-btn:hover { background:#3a3a3a; color:#fff; }
-        .drop-zone { border:1.5px dashed #2d2d2d; border-radius:14px; background:#111; padding:28px 20px 20px; text-align:center; cursor:pointer; transition:border-color 0.2s,background 0.2s; position:relative; overflow:hidden; min-height:175px; display:flex; flex-direction:column; align-items:center; justify-content:center; }
-        .drop-zone.dragover { border-color:var(--purple); background:#1a1730; }
+        .drop-zone { border:1.5px dashed #2d2d2d; border-radius:14px; background:rgba(10,12,20,0.6); padding:28px 20px 20px; text-align:center; cursor:pointer; transition:border-color 0.2s,background 0.2s; position:relative; overflow:hidden; min-height:175px; display:flex; flex-direction:column; align-items:center; justify-content:center; }
+        .drop-zone.dragover { border-color:var(--purple); background:rgba(26,23,48,0.7); }
         #imagePreview { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; display:none; border-radius:14px; }
         .loading-overlay { position:absolute; inset:0; background:rgba(0,0,0,0.85); display:none; align-items:center; justify-content:center; z-index:10; border-radius:14px; flex-direction:column; gap:10px; }
         .cloud-icon { width:44px; height:44px; margin:0 auto 10px; color:#444; }
@@ -83,12 +173,32 @@
         .bar-fill { animation:growBar 1s cubic-bezier(0.4,0,0.2,1) 0.4s both; }
         @keyframes growBar { from{width:0 !important} }
 
-        /* Detail line in reasoning strip */
         .detail-line { display:flex; align-items:flex-start; gap:8px; padding:6px 0; border-bottom:1px solid rgba(255,255,255,0.04); }
         .detail-line:last-child { border-bottom:none; }
         .detail-icon { font-size:13px; line-height:1.5; flex-shrink:0; }
         .detail-text { font-size:11.5px; color:#9ca3af; line-height:1.6; }
         .trusted-pill { display:inline-block; background:rgba(34,197,94,0.1); border:1px solid rgba(34,197,94,0.2); color:#22c55e; font-size:9px; font-weight:700; padding:1px 7px; border-radius:20px; text-transform:uppercase; letter-spacing:0.05em; margin:2px 3px 2px 0; }
+
+        /* Home view cards get glass styling */
+        .mode-card {
+            backdrop-filter: blur(16px) saturate(1.4);
+            -webkit-backdrop-filter: blur(16px) saturate(1.4);
+            background: rgba(10, 15, 25, 0.55);
+        }
+
+        /* Text/image bottom bars */
+        .bottom-bar-glass {
+            background: rgba(12, 16, 28, 0.78);
+            backdrop-filter: blur(24px) saturate(1.4);
+            -webkit-backdrop-filter: blur(24px) saturate(1.4);
+        }
+
+        /* Badge pill */
+        .status-badge-glass {
+            background: rgba(255,255,255,0.07);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+        }
     </style>
 </head>
 
@@ -105,7 +215,7 @@
             <i data-lucide="panel-left-close" id="toggle-icon" class="w-4 h-4"></i>
         </button>
     </div>
-    <button onclick="resetToHome()" class="flex items-center justify-center lg:justify-start gap-2 bg-[#141414] border border-white/5 py-2.5 px-4 rounded-xl mb-8 text-white w-full hover:bg-white/10 transition-all">
+    <button onclick="resetToHome()" class="flex items-center justify-center lg:justify-start gap-2 bg-white/5 border border-white/10 py-2.5 px-4 rounded-xl mb-8 text-white w-full hover:bg-white/10 transition-all backdrop-blur-sm">
         <i data-lucide="plus" class="w-4 h-4"></i>
         <span class="text-sm font-medium sidebar-text">New Session</span>
     </button>
@@ -113,7 +223,6 @@
         <h3 class="text-[10px] uppercase tracking-widest text-gray-600 font-bold mb-3 px-2 sidebar-text">History</h3>
         <div id="recent-scans-list" class="space-y-1"></div>
     </nav>
-        </nav>
 
     <!-- USER PROFILE -->
     <div class="mt-auto pt-4 border-t border-white/5">
@@ -128,7 +237,7 @@
         </div>
 
         <!-- LOGOUT CARD -->
-        <div id="profileMenu" class="hidden mt-3 bg-[#111] border border-white/10 rounded-xl p-3">
+        <div id="profileMenu" class="hidden mt-3 bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-3">
             <button onclick="logoutUser()" class="w-full flex items-center gap-2 text-xs text-red-400 hover:text-red-300">
                 <i data-lucide="log-out" class="w-4 h-4"></i>
                 Logout
@@ -141,44 +250,44 @@
 <main class="flex-1 flex flex-col items-center p-6 relative overflow-hidden">
 
     <!-- HOME VIEW -->
-    <div id="home-view" class="w-full flex flex-col items-center">
+    <div id="home-view" class="w-full flex flex-col items-center relative z-10">
         <div class="text-center mb-12 mt-16">
-            <div class="inline-flex items-center gap-2 bg-white/5 border border-white/10 rounded-full px-4 py-1.5 mb-6">
+            <div class="inline-flex items-center gap-2 status-badge-glass border border-white/10 rounded-full px-4 py-1.5 mb-6">
                 <div class="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse"></div>
-                <span class="text-[11px] text-gray-400 uppercase tracking-widest font-medium">Forensic Intelligence Active</span>
+                <span class="text-[11px] text-gray-300 uppercase tracking-widest font-medium">Generative Lie And Reality Evaluator</span>
             </div>
-            <h1 class="font-syne text-5xl font-extrabold text-white mb-3 tracking-tight">GuardAI</h1>
-            <p class="text-gray-500 text-sm max-w-sm mx-auto leading-relaxed">Verified forensic node analysis for media and text integrity. Truth, decoded.</p>
+            <h1 class="font-syne text-5xl font-extrabold text-white mb-3 tracking-tight drop-shadow-lg">Glare AI</h1>
+            <p class="text-gray-300 text-sm max-w-sm mx-auto leading-relaxed drop-shadow">Verified forensic node analysis for media and text integrity. Truth, decoded.</p>
         </div>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-5 w-full max-w-2xl mb-12">
-            <div onclick="switchToTextMode()" class="h-44 rounded-2xl border border-green-500/15 card-gradient-green p-6 flex flex-col justify-between cursor-pointer hover:scale-[1.02] hover:border-green-500/30 transition-all duration-300">
-                <div class="bg-green-500/10 w-fit p-2.5 rounded-xl text-green-400"><i data-lucide="file-text" class="w-5 h-5"></i></div>
+            <div onclick="switchToTextMode()" class="mode-card h-44 rounded-2xl border border-green-500/20 card-gradient-green p-6 flex flex-col justify-between cursor-pointer hover:scale-[1.02] hover:border-green-500/40 transition-all duration-300 shadow-xl">
+                <div class="bg-green-500/15 w-fit p-2.5 rounded-xl text-green-400"><i data-lucide="file-text" class="w-5 h-5"></i></div>
                 <div>
-                    <span class="font-syne font-bold text-white block text-lg">Text Verification</span>
-                    <span class="text-xs text-gray-500 mt-1 block leading-relaxed">Google Search + Fact-Check APIs for maximum accuracy.</span>
+                    <span class="font-syne font-bold text-white block text-lg drop-shadow">Text Verification</span>
+                    <span class="text-xs text-gray-400 mt-1 block leading-relaxed">Google Search + Fact-Check APIs for maximum accuracy.</span>
                 </div>
             </div>
-            <div onclick="switchToImageMode()" class="h-44 rounded-2xl border border-orange-500/15 card-gradient-orange p-6 flex flex-col justify-between cursor-pointer hover:scale-[1.02] hover:border-orange-500/30 transition-all duration-300">
-                <div class="bg-orange-500/10 w-fit p-2.5 rounded-xl text-orange-400"><i data-lucide="scan" class="w-5 h-5"></i></div>
+            <div onclick="switchToImageMode()" class="mode-card h-44 rounded-2xl border border-orange-500/20 card-gradient-orange p-6 flex flex-col justify-between cursor-pointer hover:scale-[1.02] hover:border-orange-500/40 transition-all duration-300 shadow-xl">
+                <div class="bg-orange-500/15 w-fit p-2.5 rounded-xl text-orange-400"><i data-lucide="scan" class="w-5 h-5"></i></div>
                 <div>
-                    <span class="font-syne font-bold text-white block text-lg">Image Forensics</span>
-                    <span class="text-xs text-gray-500 mt-1 block leading-relaxed">Neural detection for deepfakes and AI-generated media.</span>
+                    <span class="font-syne font-bold text-white block text-lg drop-shadow">Image Forensics</span>
+                    <span class="text-xs text-gray-400 mt-1 block leading-relaxed">Neural detection for deepfakes and AI-generated media.</span>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- CHAT VIEW — pb-36 keeps content clear of bottom bar -->
+    <!-- CHAT VIEW -->
     <div id="chat-view"
-         class="hidden w-full max-w-2xl flex-col gap-5 overflow-y-auto no-scrollbar scroll-smooth pt-8 pb-36"
+         class="hidden w-full max-w-2xl flex-col gap-5 overflow-y-auto no-scrollbar scroll-smooth pt-8 pb-36 relative z-10"
          style="flex:1; min-height:0;"></div>
 
-    <!-- TEXT BAR — no paperclip -->
-    <div id="text-bar" class="hidden w-full max-w-xl bg-[#111] border border-white/[0.08] rounded-2xl p-4 absolute bottom-8">
+    <!-- TEXT BAR -->
+    <div id="text-bar" class="hidden w-full max-w-xl bottom-bar-glass border border-white/[0.10] rounded-2xl p-4 absolute bottom-8 z-10 shadow-2xl">
         <div class="flex items-center gap-3">
             <input id="newsInput" type="text"
                    placeholder="Enter headline or text claim…"
-                   class="bg-transparent border-none outline-none w-full text-sm text-gray-200 placeholder-gray-600"
+                   class="bg-transparent border-none outline-none w-full text-sm text-gray-200 placeholder-gray-500"
                    onkeypress="if(event.key==='Enter') startTextAnalysis()">
             <div onclick="startTextAnalysis()" class="bg-green-500 p-2 rounded-full text-black cursor-pointer hover:bg-green-400 transition-colors shrink-0">
                 <i data-lucide="arrow-right" class="w-4 h-4"></i>
@@ -186,21 +295,21 @@
         </div>
     </div>
 
-    <!-- IMAGE BAR — plus icon -->
-    <div id="image-bar" class="hidden w-full max-w-xl absolute bottom-8">
-        <button onclick="openModal()" class="w-full bg-[#111] border border-orange-500/20 rounded-2xl p-4 flex items-center gap-3 cursor-pointer hover:border-orange-500/45 hover:bg-[#161616] transition-all duration-300 group">
-            <div class="w-8 h-8 rounded-xl bg-orange-500/10 border border-orange-500/20 flex items-center justify-center group-hover:bg-orange-500/20 transition-colors shrink-0">
+    <!-- IMAGE BAR -->
+    <div id="image-bar" class="hidden w-full max-w-xl absolute bottom-8 z-10">
+        <button onclick="openModal()" class="w-full bottom-bar-glass border border-orange-500/25 rounded-2xl p-4 flex items-center gap-3 cursor-pointer hover:border-orange-500/50 transition-all duration-300 group shadow-2xl">
+            <div class="w-8 h-8 rounded-xl bg-orange-500/15 border border-orange-500/25 flex items-center justify-center group-hover:bg-orange-500/25 transition-colors shrink-0">
                 <i data-lucide="plus" class="w-4 h-4 text-orange-400"></i>
             </div>
-            <span class="text-sm text-gray-500 group-hover:text-gray-300 transition-colors">Upload image to analyze</span>
-            <span class="text-[10px] text-gray-700 uppercase tracking-widest ml-auto font-mono">PNG · JPG · WEBP</span>
+            <span class="text-sm text-gray-400 group-hover:text-gray-200 transition-colors">Upload image to analyze</span>
+            <span class="text-[10px] text-gray-600 uppercase tracking-widest ml-auto font-mono">PNG · JPG · WEBP</span>
         </button>
     </div>
 
 </main>
 
 <!-- UPLOAD MODAL -->
-<div id="upload-modal" class="fixed inset-0 z-[100] hidden items-center justify-center p-4 bg-black/70 backdrop-blur-md">
+<div id="upload-modal" class="fixed inset-0 z-[100] hidden items-center justify-center p-4 bg-black/60 backdrop-blur-xl">
     <div class="upload-modal-box">
         <button class="upload-close-btn" onclick="closeModal()">✕</button>
         <div class="font-syne text-xl font-bold text-white mb-1">Image Analysis</div>
@@ -336,7 +445,6 @@ function classifyLabel(raw) {
     if (u === 'REAL') return 'real';
     if (u === 'FAKE') return 'fake';
     if (u === 'UNCERTAIN') return 'uncertain';
-    // Legacy fallback
     if (u.includes('FAKE') || u.includes('FALSE') || u.includes('MISLEAD')) return 'fake';
     if (u.includes('UNCERTAIN') || u.includes('NO EVIDENCE') || u.includes('LIKELY FAKE')) return 'uncertain';
     return 'real';
@@ -363,17 +471,14 @@ function buildTextCard(data) {
     const googleMatch     = ev.google_match     != null ? (ev.google_match * 100).toFixed(0) + '%' : '—';
     const agreementScore  = ev.agreement        != null ? (ev.agreement    * 100).toFixed(0) + '%' : '—';
 
-    // Fact check info
     const fc = ev.fact_check || {};
     const fcBadge = fc.found
         ? `<span class="trusted-pill" style="background:rgba(124,106,247,0.15);color:#a89bf7;border-color:rgba(124,106,247,0.3)">Fact-checked: ${escapeHtml(fc.rating || '').substring(0, 30)}</span>`
         : '';
 
-    // Trusted source pills
     const sourcePills = trustedSources.slice(0, 5).map(s =>
         `<span class="trusted-pill">${escapeHtml(s)}</span>`).join('');
 
-    // Detail lines from backend
     const details = data.details || [];
     const detailHtml = details.map(d => {
         const icon = d.startsWith('✔') ? '✔' : d.startsWith('✘') ? '✘' : '~';
@@ -388,7 +493,6 @@ function buildTextCard(data) {
     return `<div class="${vClass} forensic-card-wrap mb-2">
         <div class="scan-overlay"></div><div class="glow-line"></div>
         <div class="p-7">
-            <!-- Header -->
             <div class="flex items-center justify-between mb-6">
                 <div class="flex items-center gap-3">
                     <div class="w-8 h-8 bg-gradient-to-tr from-green-400 to-blue-500 rounded-lg flex items-center justify-center"><i data-lucide="search" class="w-4 h-4 text-white"></i></div>
@@ -400,7 +504,6 @@ function buildTextCard(data) {
                 <span class="text-[10px] font-bold uppercase tracking-widest px-3 py-1.5 rounded-full" style="${tagStyle}">${tag}</span>
             </div>
 
-            <!-- Score -->
             <div class="flex items-end gap-5 mb-2">
                 <span class="verdict-score count-up" style="color:${accent};text-shadow:0 0 50px ${accent}40">0</span>
                 <div class="mb-3 flex-1 min-w-0">
@@ -412,11 +515,9 @@ function buildTextCard(data) {
                 </div>
             </div>
 
-            <!-- Confidence bar -->
             <div class="flex justify-between text-[9px] text-gray-600 uppercase tracking-wider mb-1.5"><span>Confidence Score</span><span>${conf}%</span></div>
             <div class="h-1.5 bg-white/5 rounded-full overflow-hidden mb-6"><div class="h-full bar-fill rounded-full" style="width:${conf}%;background:linear-gradient(90deg,${accent}55,${accent})"></div></div>
 
-            <!-- Evidence grid -->
             <div class="grid grid-cols-2 gap-3 mb-5">
                 <div class="node-cell">
                     <p class="node-cell-label">Google Results</p>
@@ -436,8 +537,7 @@ function buildTextCard(data) {
                 </div>
             </div>
 
-            <!-- Reasoning strip -->
-            <div style="background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.05);border-radius:12px;padding:14px 16px;">
+            <div style="background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:14px 16px;">
                 <div class="flex items-center gap-2 mb-3">
                     <div class="w-1.5 h-1.5 rounded-full" style="background:${accent}"></div>
                     <p class="text-[9px] uppercase tracking-widest text-gray-600 font-bold">Verdict reasoning — all signals</p>
@@ -630,7 +730,6 @@ function toggleProfileMenu() {
     const menu = document.getElementById('profileMenu');
     menu.classList.toggle('hidden');
 }
-
 function logoutUser() {
     window.location.href = "/logout";
 }

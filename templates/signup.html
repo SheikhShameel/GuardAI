@@ -1,281 +1,212 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Login / Sign Up</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-<style>
-*{margin:0;padding:0;box-sizing:border-box;font-family:'Inter',sans-serif}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GuardAI - Sign Up</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { box-sizing: border-box; }
+        
+        body, html {
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            font-family: 'Inter', sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #f1f4ff;
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(186, 212, 255, 0.7) 0px, transparent 40%),
+                radial-gradient(at 100% 0%, rgba(206, 222, 255, 0.6) 0px, transparent 40%),
+                radial-gradient(at 100% 100%, rgba(179, 218, 255, 0.7) 0px, transparent 40%),
+                radial-gradient(at 0% 100%, rgba(188, 230, 255, 0.6) 0px, transparent 40%);
+        }
 
-body{
-  min-height:100vh;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  background:linear-gradient(135deg,#b8c6db,#f5f7fa);
-  padding:20px;
-}
+        .glass-base {
+            background: rgba(255, 255, 255, 0.4);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border: 1px solid rgba(255, 255, 255, 0.7);
+            border-radius: 40px;
+            width: 100%;
+            max-width: 1100px;
+            min-height: 720px; 
+            margin: 40px 20px;
+            display: flex;
+            position: relative;
+            box-shadow: 0 40px 100px -30px rgba(0, 0, 0, 0.04);
+        }
 
-.container{
-  width:100%;
-  max-width:1100px;
-  background:#fff;
-  border-radius:20px;
-  box-shadow:0 20px 40px rgba(0,0,0,.1);
-  display:flex;
-  overflow:hidden;
-}
+        .form-card {
+            background: #ffffff;
+            border-radius: 36px;
+            width: 100%;
+            max-width: 440px;
+            padding: 40px 48px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.02);
+        }
 
-/* LEFT */
-.left{
-  flex:1;
-  padding:60px;
-  background:linear-gradient(135deg,#cfd9df,#e2ebf0);
-  display:flex;
-  flex-direction:column;
-  justify-content:center;
-}
+        .input-style {
+            background-color: #f9fafb;
+            border: 1px solid #f1f3f5;
+            transition: all 0.2s ease;
+        }
 
-.left h1{font-size:28px;margin-bottom:15px}
-.left p{color:#555}
+        .input-style:focus {
+            background-color: #fff;
+            border-color: #0052ff;
+            outline: none;
+            box-shadow: 0 0 0 4px rgba(0, 82, 255, 0.05);
+        }
 
-/* RIGHT */
-.right{
-  flex:1;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  padding:40px;
-  background:linear-gradient(135deg,#d9e4f5,#f5f7fa);
-}
+        .fade-element {
+            transition: opacity 0.8s ease-in-out;
+        }
 
-.card{
-  width:100%;
-  max-width:380px;
-  background:#f9f9fb;
-  padding:35px;
-  border-radius:16px;
-  box-shadow:0 10px 30px rgba(0,0,0,.05);
-  position:relative;
-  overflow:hidden;
-}
-
-/* Tabs */
-.tabs{
-  position:relative;
-  display:flex;
-  background:#eef1f6;
-  border-radius:8px;
-  margin-bottom:25px;
-}
-
-.tabs button{
-  flex:1;
-  padding:10px;
-  border:none;
-  background:none;
-  cursor:pointer;
-  font-weight:600;
-  z-index:2;
-}
-
-.indicator{
-  position:absolute;
-  width:50%;
-  height:100%;
-  background:#fff;
-  border-radius:8px;
-  transition:.3s;
-  box-shadow:0 2px 8px rgba(0,0,0,.05);
-}
-
-.form{
-  transition:.4s;
-}
-
-.hidden{
-  opacity:0;
-  transform:translateX(20px);
-  position:absolute;
-  pointer-events:none;
-}
-
-.input-group{
-  margin-bottom:15px;
-}
-
-.input-group label{
-  font-size:13px;
-  margin-bottom:5px;
-  display:block;
-}
-
-.input-wrapper{
-  position:relative;
-}
-
-.input-wrapper input{
-  width:100%;
-  padding:10px;
-  border-radius:6px;
-  border:1px solid #ddd;
-}
-
-.toggle-password{
-  position:absolute;
-  right:10px;
-  top:50%;
-  transform:translateY(-50%);
-  cursor:pointer;
-  font-size:12px;
-  color:#555;
-}
-
-.submit-btn{
-  width:100%;
-  padding:12px;
-  border:none;
-  border-radius:6px;
-  background:#1e4ed8;
-  color:#fff;
-  font-weight:600;
-  cursor:pointer;
-  margin-top:10px;
-  
-}
-.social-btn{
-  width:100%;
-  padding:12px;
-  border-radius:6px;
-  border:1px solid #ddd;
-  background:#fff;
-  cursor:pointer;
-  font-weight:600;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  gap:10px;
-  margin-top:10px;
-  transition:.2s;
-}
-
-.social-btn:hover{
-  background:#f1f1f1;
-}
-
-.divider{
-  text-align:center;
-  margin:15px 0;
-  font-size:12px;
-  color:#777;
-}
-
-.checkbox{
-  font-size:13px;
-  margin:10px 0;
-}
-
-/* Responsive */
-@media(max-width:900px){
-  .container{flex-direction:column}
-  .left{display:none}
-}
-</style>
+        @media (max-width: 768px) {
+            .glass-base { flex-direction: column; height: auto; padding-bottom: 40px; }
+            .w-1\/2 { width: 100%; }
+            .form-card { margin: 0 auto; }
+        }
+    </style>
 </head>
 <body>
 
-<div class="container">
+    <div class="glass-base">
+        <div class="w-1/2 flex flex-col justify-between p-14">
+            <div class="mt-20">
+                <h1 id="h-fade" class="text-[40px] font-bold text-[#181C32] leading-[1.1] tracking-tight fade-element">
+                    Fast, Efficient and Productive
+                </h1>
+                <p id="p-fade" class="text-[#5E6278] mt-4 text-[17px] max-w-[320px] leading-relaxed fade-element">
+                    Advanced AI analysis to verify digital media authenticity in real-time.
+                </p>
+            </div>
 
-  <div class="left">
-    <h1>Fast, Efficient and Productive</h1>
-    <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
-  </div>
-
-  <div class="right">
-    <div class="card">
-
-      <div class="tabs">
-        <div class="indicator" id="indicator"></div>
-        <button onclick="showLogin()">Login</button>
-        <button onclick="showSignup()">Sign Up</button>
-      </div>
-
-      <!-- LOGIN -->
-     <form id="loginForm" class="form" method="POST" action="/login">
-        <div class="input-group">
-          <label>Email</label>
-          <input type="email" name="email" required>
+            <div class="flex items-center justify-between pb-4 mt-12 md:mt-0">
+                <div class="flex items-center cursor-pointer">
+                    <img src="https://flagcdn.com/us.svg" class="w-6 h-6 rounded-full mr-2 shadow-sm" alt="US">
+                    <span class="text-sm font-semibold text-[#3F4254]">English</span>
+                    <i class="fas fa-chevron-down ml-2 text-[10px] text-gray-400"></i>
+                </div>
+                <div class="flex space-x-6 text-[13px] font-semibold text-[#0052ff]">
+                    <a href="#" class="hover:underline">Terms</a>
+                    <a href="#" class="hover:underline">Plans</a>
+                    <a href="#" class="hover:underline">Contact Us</a>
+                </div>
+            </div>
         </div>
 
-        <div class="input-group">
-          <label>Password</label>
-          <div class="input-wrapper">
-            <input type="password" name="password" id="loginPass" required>
-            <span class="toggle-password" onclick="togglePass('loginPass')">Show</span>
-          </div>
+        <div class="w-1/2 flex items-center justify-center p-6 md:pr-10">
+            <div class="form-card">
+                <h2 class="text-[26px] font-bold text-[#181C32]">Sign Up</h2>
+                <p class="text-[10px] text-[#A1A5B7] mt-1 uppercase font-bold tracking-widest">Your Social Campaigns</p>
+
+                <form id="signup-form" class="mt-8 space-y-4" action="/register" method="POST">
+                    <div>
+                        <label class="block text-[11px] font-bold text-[#3F4254] uppercase tracking-widest mb-1.5">Email</label>
+                        <input type="email" name="email" class="input-style w-full px-4 py-3 rounded-xl text-sm" placeholder="Email" required>
+                    </div>
+
+                    <div>
+                        <label class="block text-[11px] font-bold text-[#3F4254] uppercase tracking-widest mb-1.5">Password</label>
+                        <div class="relative">
+                            <input type="password" name="password" id="password" class="input-style w-full px-4 py-3 rounded-xl text-sm" placeholder="Password" required>
+                            <i id="toggle-eye" class="far fa-eye-slash absolute right-4 top-1/2 -translate-y-1/2 text-gray-300 cursor-pointer text-xs" onclick="togglePasswordVisibility()"></i>
+                        </div>
+                        <p class="text-[10px] text-[#A1A5B7] mt-1.5 leading-tight">Use 8 or more characters with a mix of letters, numbers & symbols.</p>
+                    </div>
+
+                    <div>
+                        <label class="block text-[11px] font-bold text-[#3F4254] uppercase tracking-widest mb-1.5">Repeat Password</label>
+                        <input type="password" id="confirm-password" class="input-style w-full px-4 py-3 rounded-xl text-sm" placeholder="Repeat Password" required>
+                    </div>
+
+                    <div class="flex items-center space-x-2 pt-1">
+                        <input type="checkbox" required class="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                        <label class="text-[12px] text-[#5E6278] font-medium">I accept the <a href="#" class="text-[#0052ff] font-bold hover:underline">Term</a></label>
+                    </div>
+
+                    <div class="relative flex items-center py-2">
+                        <div class="flex-grow border-t border-[#F1F3F5]"></div>
+                        <span class="flex-shrink mx-4 text-[10px] text-[#A1A5B7] font-bold uppercase tracking-widest">Or with</span>
+                        <div class="flex-grow border-t border-[#F1F3F5]"></div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3">
+                        <a href="/login/google" class="flex items-center justify-center py-2.5 border border-[#F1F3F5] rounded-xl hover:bg-gray-50 transition text-[11px] font-bold text-[#3F4254]">
+                            <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" class="w-3.5 h-3.5 mr-2" alt="Google"> Sign Up with Google
+                        </a>
+                        <button type="button" class="flex items-center justify-center py-2.5 border border-[#F1F3F5] rounded-xl hover:bg-gray-50 transition text-[11px] font-bold text-[#3F4254]">
+                            <i class="fab fa-apple text-base mr-2"></i> Sign Up with Apple
+                        </button>
+                    </div>
+
+                    <button type="submit" class="w-full bg-[#0052ff] text-white py-3.5 rounded-xl font-bold text-[14px] hover:bg-blue-700 transition shadow-lg shadow-blue-100 mt-2">
+                        Sign Up
+                    </button>
+
+                    <p class="text-center text-[12px] text-[#5E6278] pt-2">
+                        Already have an account? <a href="/login_page" class="text-[#0052ff] font-bold ml-1 hover:underline">Sign In</a>
+                    </p>
+                </form>
+            </div>
         </div>
-
-        <button class="submit-btn">Login</button>
-      </form>
-
-      <!-- SIGNUP -->
-      <form id="signupForm" class="form hidden" method="POST" action="/register">
-        <div class="input-group">
-          <label>Email</label>
-          <input type="email" name="email" required>
-        </div>
-
-        <div class="input-group">
-          <label>Password</label>
-          <div class="input-wrapper">
-            <input type="password" name="password" id="signupPass" required>
-            <span class="toggle-password" onclick="togglePass('signupPass')">Show</span>
-          </div>
-        </div>
-
-        <div class="checkbox">
-          <input type="checkbox" required> I accept Terms
-        </div>
-
-        <button class="submit-btn">Create Account</button>
-        <div class="divider">OR</div>
-
-<a href="/login/google" style="text-decoration:none;">
-  <button type="button" class="social-btn">
-    <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="18">
-    Sign in with Google
-  </button>
-</a>
-      </form>
-
     </div>
-  </div>
 
-</div>
+    
 
-<script>
-const loginForm = document.getElementById('loginForm');
-const signupForm = document.getElementById('signupForm');
-const indicator = document.getElementById('indicator');
+    <script>
+        // --- 1. Animation Logic ---
+        const content = [
+            { h: "Detecting Deepfake News", p: "Advanced AI analysis to verify digital media authenticity in real-time." },
+            { h: "Fast, Efficient and Productive", p: "Automate your security workflow with our enterprise-grade GuardAI tools." },
+            { h: "Verify Digital Integrity", p: "Protecting your information from AI-generated misinformation and synthetic media." }
+        ];
 
-function showLogin(){
-  indicator.style.left = "0%";
-  loginForm.classList.remove("hidden");
-  signupForm.classList.add("hidden");
-}
+        let i = 0;
+        const hEl = document.getElementById('h-fade');
+        const pEl = document.getElementById('p-fade');
 
-function showSignup(){
-  indicator.style.left = "50%";
-  signupForm.classList.remove("hidden");
-  loginForm.classList.add("hidden");
-}
+        function rotate() {
+            hEl.style.opacity = 0;
+            pEl.style.opacity = 0;
+            setTimeout(() => {
+                i = (i + 1) % content.length;
+                hEl.textContent = content[i].h;
+                pEl.textContent = content[i].p;
+                hEl.style.opacity = 1;
+                pEl.style.opacity = 1;
+            }, 800);
+        }
+        setInterval(rotate, 5000);
 
-function togglePass(id){
-  const input = document.getElementById(id);
-  input.type = input.type === "password" ? "text" : "password";
-}
-</script>
+        // --- 2. Form Logic & Validation ---
+        const signupForm = document.getElementById('signup-form');
+        const password = document.getElementById('password');
+        const confirmPassword = document.getElementById('confirm-password');
 
+        signupForm.onsubmit = function(e) {
+            if (password.value !== confirmPassword.value) {
+                e.preventDefault(); // Stop form from sending
+                alert("Passwords do not match! Please try again.");
+                return false;
+            }
+            return true;
+        };
+
+        // --- 3. Password Visibility Toggle ---
+        function togglePasswordVisibility() {
+            const type = password.getAttribute('type') === 'password' ? 'text' : 'password';
+            password.setAttribute('type', type);
+            const eyeIcon = document.getElementById('toggle-eye');
+            eyeIcon.classList.toggle('fa-eye');
+            eyeIcon.classList.toggle('fa-eye-slash');
+        }
+    </script>
 </body>
 </html>
