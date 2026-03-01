@@ -6,4 +6,4 @@ __pycache__/
 .env
 *.db
 __pycache__/
-uploads/
+uploads/secrets.toml
