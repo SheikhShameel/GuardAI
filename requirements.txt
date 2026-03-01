@@ -1,0 +1,9 @@
+flask
+gunicorn
+numpy
+pillow
+scikit-learn
+tensorflow
+opencv-python-headless
+joblib
+python-dotenv
