@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Deepfake Exact Animation - 6 Lines</title>
+    <style>
+        :root {
+            --bg: #000000;
+            --white: #ffffff;
+            /* 6 seconds total for 6 phrases (1s each) */
+            --cycle: 6s; 
+        }
+
+        * { box-sizing: border-box; }
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg);
+            height: 100vh;
+            width: 100vw;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            overflow: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .stage {
+            position: relative;
+            display: grid;
+            place-items: center;
+            width: 100%;
+        }
+
+        .line {
+            grid-area: 1 / 1 / 2 / 2;
+            color: var(--white);
+            font-size: 3.5rem;
+            font-weight: 400;
+            letter-spacing: -0.05em;
+            opacity: 0;
+            white-space: nowrap;
+            text-align: center;
+            animation: dittoLoop var(--cycle) linear infinite;
+        }
+
+        .line strong {
+            font-weight: 700;
+            letter-spacing: -0.03em;
+        }
+
+        /* Incremental 1 second offsets */
+        .l-1 { animation-delay: 0s; }
+        .l-2 { animation-delay: 1s; }
+        .l-3 { animation-delay: 2s; }
+        .l-4 { animation-delay: 3s; }
+        .l-5 { animation-delay: 4s; }
+        .l-6 { animation-delay: 5s; }
+
+        @keyframes dittoLoop {
+            /* Each line is active for 1/6th of the time (approx 16.66%)
+            */
+            0% {
+                opacity: 0;
+                transform: scale(0.95);
+                filter: blur(8px);
+            }
+            /* Fast fade in & sharpen (at 0.1s) */
+            1.6% {
+                opacity: 1;
+                filter: blur(0px);
+            }
+            /* Hold and slow zoom (up to 0.8s) */
+            13.3% {
+                opacity: 1;
+                transform: scale(1.02);
+            }
+            /* Fast fade out (at 1s mark) */
+            16.66% {
+                opacity: 0;
+                transform: scale(1.04);
+            }
+            /* Hidden for the remainder of the 6s cycle */
+            100% {
+                opacity: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="stage">
+        <div class="line l-1">Seeing is <strong>no longer believing.</strong></div>
+        <div class="line l-2">Reality is <strong>being rewritten.</strong></div>
+        <div class="line l-3">Trust <strong>nothing you see.</strong></div>
+        <div class="line l-4">Believe what <strong>is fake.</strong></div>
+        <div class="line l-5">Question what <strong>is real.</strong></div>
+        <div class="line l-6">Trust <strong>nothing.</strong></div>
+    </div>
+
+</body>
+</html>
