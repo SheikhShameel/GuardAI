@@ -46,7 +46,7 @@ NEWSDATA_API_KEY     = os.getenv("NEWSDATA_API_KEY", "pub_ac173e168fcf4f398a2bfd
 GNEWS_API_KEY        = os.getenv("GNEWS_API_KEY", "a5f8bf0087f6b5f211e06dd422d32eb0")
 SERPAPI_KEY          = os.getenv("SERPAPI_KEY", "")                          # Optional, more reliable
 
-# Trusted news domains — presence of these in results boosts real score
+# Trusted news domains — presence of these in results boosts real scorey
 TRUSTED_DOMAINS = {
     "thehindu.com", "bbc.com", "bbc.co.uk", "reuters.com", "apnews.com",
     "ndtv.com", "theindianexpress.com", "hindustantimes.com", "livemint.com",
