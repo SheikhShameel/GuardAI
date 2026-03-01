@@ -78,7 +78,7 @@
         .no-scrollbar::-webkit-scrollbar { display:none; }
         .no-scrollbar { -ms-overflow-style:none; scrollbar-width:none; }
 
-        main { position: relative; z-index: 5; }
+       main { position: relative; z-index: 5; overflow-y: auto; }
         main::before { content:''; position:absolute; inset:0; background:rgba(0,0,0,0.18); pointer-events:none; }
 
         .thinking-bubble { display:flex; align-items:center; gap:6px; padding:14px 20px; background:rgba(15,20,30,0.75); backdrop-filter:blur(16px); border:1px solid rgba(255,255,255,0.10); border-radius:20px 20px 20px 4px; width:fit-content; }
@@ -157,6 +157,33 @@
         .mode-card { backdrop-filter:blur(16px) saturate(1.4); -webkit-backdrop-filter:blur(16px) saturate(1.4); background:rgba(10,15,25,0.55); }
         .bottom-bar-glass { background:rgba(12,16,28,0.78); backdrop-filter:blur(24px) saturate(1.4); -webkit-backdrop-filter:blur(24px) saturate(1.4); }
         .status-badge-glass { background:rgba(255,255,255,0.07); backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px); }
+        
+        /* ── NEWS FEED ── */
+        .feed-section { width:100%; max-width:42rem; margin-top:24px; margin-bottom:120px; }
+        .feed-header-row { display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; }
+        .feed-title-label { font-size:0.7rem; letter-spacing:0.12em; text-transform:uppercase; color:#4b5563; }
+        .live-dot { width:7px; height:7px; background:#22c55e; border-radius:50%; animation:livePulse 2s infinite; }
+        @keyframes livePulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.4;transform:scale(1.4)} }
+        .live-text { font-size:0.68rem; color:#22c55e; letter-spacing:0.08em; text-transform:uppercase; }
+        .feed-tabs { display:flex; gap:6px; margin-bottom:16px; flex-wrap:wrap; }
+        .feed-tab { padding:4px 13px; border-radius:20px; font-size:0.74rem; cursor:pointer; border:1px solid rgba(255,255,255,0.08); background:transparent; color:#4b5563; transition:all 0.2s; font-family:'DM Sans',sans-serif; }
+        .feed-tab:hover { color:#e2e8f0; border-color:rgba(255,255,255,0.18); }
+        .feed-tab.active { background:#22c55e; border-color:#22c55e; color:#000; font-weight:700; }
+        .news-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:10px; }
+        .news-card { background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.07); border-radius:14px; padding:14px 16px; cursor:pointer; transition:all 0.2s; animation:cardIn 0.35s ease both; }
+        .news-card:hover { background:rgba(255,255,255,0.07); border-color:rgba(34,197,94,0.3); transform:translateY(-2px); }
+        @keyframes cardIn { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
+        .card-src { display:flex; align-items:center; gap:6px; margin-bottom:8px; }
+        .card-src-dot { width:5px; height:5px; border-radius:50%; }
+        .card-src-name { font-size:0.68rem; text-transform:uppercase; letter-spacing:0.07em; color:#4b5563; }
+        .card-src-time { font-size:0.65rem; color:#374151; margin-left:auto; }
+        .card-hl { font-family:'Syne',sans-serif; font-size:0.85rem; font-weight:600; line-height:1.45; color:#e2e8f0; margin-bottom:10px; }
+        .card-foot { display:flex; align-items:center; justify-content:space-between; }
+        .card-check { font-size:0.68rem; color:#22c55e; opacity:0; transition:opacity 0.2s; }
+        .news-card:hover .card-check { opacity:1; }
+        .skel-card { background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.06); border-radius:14px; padding:14px 16px; display:flex; flex-direction:column; gap:8px; }
+        .skel { background:linear-gradient(90deg,rgba(255,255,255,0.04) 25%,rgba(255,255,255,0.07) 50%,rgba(255,255,255,0.04) 75%); background-size:200% 100%; animation:shimmer 1.5s infinite; border-radius:5px; }
+        @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
     </style>
 </head>
 
@@ -218,60 +245,60 @@
                 <span class="text-[11px] text-gray-300 uppercase tracking-widest font-medium">Generative Lie And Reality Evaluator</span>
             </div>
             <!-- Kinetic typography animation -->
-<div id="kinetic-line" style="display:flex;align-items:baseline;gap:0;font-family:'Syne',sans-serif;font-size:clamp(28px,4vw,48px);color:rgba(255,255,255,0.92);font-weight:300;letter-spacing:0.01em;white-space:nowrap;margin-bottom:12px;justify-content:center;">
-    <span style="font-weight:300;color:rgba(255,255,255,0.92);">It's not just a </span>
-    <span id="kinetic-word" style="font-weight:800;color:#ffffff;margin-left:0.3em;"></span>
-    <span id="kinetic-cursor" style="display:inline-block;width:3px;height:1.1em;background:rgba(255,255,255,0.85);margin-left:3px;vertical-align:middle;position:relative;top:-2px;animation:kineticBlink 0.53s steps(1) infinite;"></span>
-</div>
-<style>
-@keyframes kineticBlink { 0%,100%{opacity:1} 50%{opacity:0} }
-</style>
-<script>
-(function(){
-    const WORDS=['deepfake.','lie.','Identitytheft.','fake.','hoax.','Misinfo.'];
-    const wordEl=document.getElementById('kinetic-word');
-    const cursor=document.getElementById('kinetic-cursor');
-    const line=document.getElementById('kinetic-line');
-    let wi=0;
-    const sl=ms=>new Promise(r=>setTimeout(r,ms));
-    async function typeWord(text){
-        wordEl.textContent='';
-        cursor.style.animation='kineticBlink 0.53s steps(1) infinite';
-        for(let i=0;i<text.length;i++){
-            wordEl.textContent=text.slice(0,i+1);
-            await sl(text[i]==='.'?80:65);
-        }
-        cursor.style.animation='none';
-        cursor.style.opacity='0';
-    }
-    async function blurOut(){
-        line.style.transition='opacity 280ms ease-in,filter 280ms ease-in';
-        line.style.opacity='0';line.style.filter='blur(8px)';
-        await sl(280);
-    }
-    async function blurIn(){
-        line.style.transition='none';line.style.filter='blur(4px)';line.style.opacity='0';
-        wordEl.textContent='';cursor.style.opacity='1';
-        await sl(20);
-        line.style.transition='opacity 180ms ease-out,filter 180ms ease-out';
-        line.style.opacity='1';line.style.filter='blur(0px)';
-        await sl(180);
-    }
-    async function run(){
-        await sl(400);
-        line.style.opacity='1';
-        cursor.style.opacity='1';
-        while(true){
-            await typeWord(WORDS[wi%WORDS.length]);
-            await sl(1100);
-            await blurOut();
-            wi++;
-            await blurIn();
-        }
-    }
-    run();
-})();
-</script>
+            <div id="kinetic-line" style="display:flex;align-items:baseline;gap:0;font-family:'Syne',sans-serif;font-size:clamp(28px,4vw,48px);color:rgba(255,255,255,0.92);font-weight:300;letter-spacing:0.01em;white-space:nowrap;margin-bottom:12px;justify-content:center;">
+                <span style="font-weight:300;color:rgba(255,255,255,0.92);">It's not just a </span>
+                <span id="kinetic-word" style="font-weight:800;color:#ffffff;margin-left:0.3em;"></span>
+                <span id="kinetic-cursor" style="display:inline-block;width:3px;height:1.1em;background:rgba(255,255,255,0.85);margin-left:3px;vertical-align:middle;position:relative;top:-2px;animation:kineticBlink 0.53s steps(1) infinite;"></span>
+            </div>
+            <style>
+            @keyframes kineticBlink { 0%,100%{opacity:1} 50%{opacity:0} }
+            </style>
+            <script>
+            (function(){
+                const WORDS=['deepfake.','lie.','Identitytheft.','fake.','hoax.','Misinfo.'];
+                const wordEl=document.getElementById('kinetic-word');
+                const cursor=document.getElementById('kinetic-cursor');
+                const line=document.getElementById('kinetic-line');
+                let wi=0;
+                const sl=ms=>new Promise(r=>setTimeout(r,ms));
+                async function typeWord(text){
+                    wordEl.textContent='';
+                    cursor.style.animation='kineticBlink 0.53s steps(1) infinite';
+                    for(let i=0;i<text.length;i++){
+                        wordEl.textContent=text.slice(0,i+1);
+                        await sl(text[i]==='.'?80:65);
+                    }
+                    cursor.style.animation='none';
+                    cursor.style.opacity='0';
+                }
+                async function blurOut(){
+                    line.style.transition='opacity 280ms ease-in,filter 280ms ease-in';
+                    line.style.opacity='0';line.style.filter='blur(8px)';
+                    await sl(280);
+                }
+                async function blurIn(){
+                    line.style.transition='none';line.style.filter='blur(4px)';line.style.opacity='0';
+                    wordEl.textContent='';cursor.style.opacity='1';
+                    await sl(20);
+                    line.style.transition='opacity 180ms ease-out,filter 180ms ease-out';
+                    line.style.opacity='1';line.style.filter='blur(0px)';
+                    await sl(180);
+                }
+                async function run(){
+                    await sl(400);
+                    line.style.opacity='1';
+                    cursor.style.opacity='1';
+                    while(true){
+                        await typeWord(WORDS[wi%WORDS.length]);
+                        await sl(1100);
+                        await blurOut();
+                        wi++;
+                        await blurIn();
+                    }
+                }
+                run();
+            })();
+            </script>
             <p class="text-gray-300 text-sm max-w-sm mx-auto leading-relaxed drop-shadow">Verified forensic node analysis for media and text integrity. Truth, decoded.</p>
         </div>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-5 w-full max-w-2xl mb-12">
@@ -289,12 +316,33 @@
                     <span class="text-xs text-gray-400 mt-1 block leading-relaxed">Neural detection for deepfakes and AI-generated media.</span>
                 </div>
             </div>
+            
         </div>
-    </div>
+    </div><!-- END HOME VIEW -->
 
     <!-- CHAT VIEW -->
-    <div id="chat-view" class="hidden w-full max-w-2xl flex-col gap-5 overflow-y-auto no-scrollbar scroll-smooth pt-8 pb-36 relative z-10" style="flex:1; min-height:0;"></div>
-
+    <div id="chat-view" class="hidden w-full max-w-2xl flex-col gap-5 overflow-y-auto no-scrollbar scroll-smooth pt-8 pb-36 relative z-10" style="flex:1; min-height:0;">
+        <!-- NEWS FEED shown before any analysis -->
+        <div id="chat-feed-section" class="feed-section" style="margin-bottom:0;">
+            <div class="feed-header-row">
+                <span class="feed-title-label">Trending Headlines</span>
+                <div style="display:flex;align-items:center;gap:7px">
+                    <div class="live-dot"></div>
+                    <span class="live-text">Live</span>
+                </div>
+            </div>
+            <div class="feed-tabs">
+                <button class="feed-tab active" data-cat="general">All</button>
+                <button class="feed-tab" data-cat="technology">Tech</button>
+                <button class="feed-tab" data-cat="science">Science</button>
+                <button class="feed-tab" data-cat="health">Health</button>
+                <button class="feed-tab" data-cat="business">Business</button>
+                <button class="feed-tab" data-cat="politics">Politics</button>
+            </div>
+            <div class="news-grid" id="newsGrid"></div>
+        </div>
+    </div>
+    
     <!-- TEXT BAR -->
     <div id="text-bar" class="hidden w-full max-w-xl bottom-bar-glass border border-white/[0.10] rounded-2xl p-4 absolute bottom-8 z-10 shadow-2xl">
         <div class="flex items-center gap-3">
@@ -376,7 +424,37 @@ function switchToTextMode() {
     document.getElementById('text-bar').classList.remove('hidden');
     document.getElementById('image-bar').classList.add('hidden');
     setTimeout(() => document.getElementById('newsInput').focus(), 60);
+    
+    // Re-inject feed if chat is empty (e.g. after reset)
+    const chat = document.getElementById('chat-view');
+    if (!document.getElementById('chat-feed-section') && chat.children.length === 0) {
+        chat.innerHTML = `<div id="chat-feed-section" class="feed-section" style="margin-bottom:0;">
+            <div class="feed-header-row">
+                <span class="feed-title-label">Trending Headlines</span>
+                <div style="display:flex;align-items:center;gap:7px"><div class="live-dot"></div><span class="live-text">Live</span></div>
+            </div>
+            <div class="feed-tabs">
+                <button class="feed-tab active" data-cat="general">All</button>
+                <button class="feed-tab" data-cat="technology">Tech</button>
+                <button class="feed-tab" data-cat="science">Science</button>
+                <button class="feed-tab" data-cat="health">Health</button>
+                <button class="feed-tab" data-cat="business">Business</button>
+                <button class="feed-tab" data-cat="politics">Politics</button>
+            </div>
+            <div class="news-grid" id="newsGrid"></div>
+        </div>`;
+        attachFeedTabs();
+        loadFeed('general');
+    }
 }
+
+function attachFeedTabs() {
+    document.querySelectorAll('.feed-tab').forEach(t => t.addEventListener('click', () => {
+        document.querySelectorAll('.feed-tab').forEach(x => x.classList.remove('active'));
+        t.classList.add('active'); feedCat = t.dataset.cat; loadFeed(feedCat);
+    }));
+}
+
 function switchToImageMode() {
     currentMode = 'image'; _showChat();
     document.getElementById('image-bar').classList.remove('hidden');
@@ -401,6 +479,7 @@ async function startTextAnalysis() {
     const query = input.value.trim(); if (!query) return;
     input.value = ''; input.placeholder = 'Scanning nodes…';
     const chat = document.getElementById('chat-view');
+    document.getElementById('chat-feed-section')?.remove();
     const bubble = document.createElement('div');
     bubble.className = 'text-claim'; bubble.style.alignSelf = 'flex-end';
     bubble.innerHTML = `<p class="text-sm text-gray-200 italic leading-relaxed">"${escapeHtml(query)}"</p>`;
@@ -619,7 +698,6 @@ async function renderImageFlow(data) {
     setTimeout(() => triggerArc(data.id, data.confidence), 80);
     animateCountUp(wrap.querySelector('.count-up'), 0, data.confidence, 1000);
 }
-
 function triggerArc(id, confidence) {
     requestAnimationFrame(() => {
         const arc = document.getElementById('arcCircle_' + id); if (!arc) return;
@@ -784,6 +862,71 @@ window.onload = () => {
         addSidebarEntry(id, first.type==='image' ? 'Img: '+(first.filename||'image') : 'Claim: '+(first.query?.substring(0,12)||''), first.type);
     });
 };
+
+// ── NEWS FEED ──────────────────────────────────────────────────
+const NEWS_API_KEY = "b1cb6c846e24477d957545621b61a5de";
+const SRC_COLORS = {'BBC News':'#bb1919','Reuters':'#f97316','TechCrunch':'#22c55e','The Verge':'#7c3aed','CNN':'#cc0000','AP News':'#1d4ed8'};
+const TAG_STYLES = {technology:'background:rgba(124,58,237,0.15);color:#a78bfa',science:'background:rgba(6,182,212,0.15);color:#67e8f9',health:'background:rgba(34,197,94,0.15);color:#86efac',business:'background:rgba(249,115,22,0.15);color:#fdba74',politics:'background:rgba(239,68,68,0.15);color:#fca5a5',general:'background:rgba(100,116,139,0.15);color:#94a3b8'};
+let feedCat = 'general';
+
+async function loadFeed(cat) {
+    const grid = document.getElementById('newsGrid'); if (!grid) return;
+    grid.innerHTML = Array(6).fill(`<div class="skel-card"><div class="skel" style="height:10px;width:38%"></div><div class="skel" style="height:14px;width:92%"></div><div class="skel" style="height:14px;width:70%"></div></div>`).join('');
+    if (NEWS_API_KEY !== '') {
+        try {
+            const r = await fetch(`https://newsapi.org/v2/top-headlines?country=us&category=${cat}&pageSize=9&apiKey=${NEWS_API_KEY}`);
+            const d = await r.json();
+            if (d.articles?.length) { renderFeed(d.articles, cat); return; }
+        } catch(e) {}
+    }
+    renderFeed(DEMO[cat] || DEMO.general, cat);
+}
+function renderFeed(articles, cat) {
+    const grid = document.getElementById('newsGrid'); if (!grid) return;
+    const catLabel = cat.charAt(0).toUpperCase()+cat.slice(1);
+    grid.innerHTML = articles.map((a,i) => {
+        const src = a.source?.name || 'News';
+        const dot = SRC_COLORS[src] || '#4b5563';
+        const time = a.publishedAt ? timeAgo(a.publishedAt) : '';
+        const hl = (a.title||'').replace(/[\u2018\u2019]/g,"'").replace(/[\u201C\u201D]/g,'"');
+        return `<div class="news-card" style="animation-delay:${i*0.05}s" onclick="injectHeadline('${hl.replace(/'/g,"\\'").replace(/"/g,'&quot;')}')">
+            <div class="card-src"><div class="card-src-dot" style="background:${dot}"></div><span class="card-src-name">${escapeHtml(src)}</span><span class="card-src-time">${time}</span></div>
+            <div class="card-hl">${escapeHtml(hl)}</div>
+            <div class="card-foot"><span style="font-size:0.66rem;padding:2px 8px;border-radius:4px;font-weight:600;${TAG_STYLES[cat]||TAG_STYLES.general}">${catLabel}</span><span class="card-check">→ Check claim</span></div>
+        </div>`;
+    }).join('');
+}
+function injectHeadline(hl) {
+    switchToTextMode();
+    setTimeout(() => {
+        const inp = document.getElementById('newsInput');
+        if (inp) {
+            inp.value = hl;
+            inp.focus();
+            startTextAnalysis(); 
+        }
+    }, 80);
+}
+function timeAgo(d) {
+    const s = (Date.now()-new Date(d))/1000;
+    if(s<60) return 'just now'; if(s<3600) return `${Math.floor(s/60)}m ago`;
+    if(s<86400) return `${Math.floor(s/3600)}h ago`; return `${Math.floor(s/86400)}d ago`;
+}
+
+// Attach tabs on load
+attachFeedTabs();
+
+const DEMO = {
+    general:[{title:'Global Leaders Gather for Emergency Climate Summit in Geneva',source:{name:'Reuters'},publishedAt:new Date(Date.now()-3600000).toISOString()},{title:'Central Bank Raises Interest Rates for Third Consecutive Quarter',source:{name:'BBC News'},publishedAt:new Date(Date.now()-7200000).toISOString()},{title:'WHO Declares New Health Emergency Over Rapidly Spreading Outbreak',source:{name:'AP News'},publishedAt:new Date(Date.now()-10800000).toISOString()},{title:'Major Earthquake Strikes Pacific Coast, Tsunami Warning Issued',source:{name:'CNN'},publishedAt:new Date(Date.now()-14400000).toISOString()},{title:'Diplomatic Tensions Rise as Nations Dispute Arctic Territory Claims',source:{name:'Reuters'},publishedAt:new Date(Date.now()-18000000).toISOString()},{title:'Record-Breaking Wildfires Devastate Southern Hemisphere Forests',source:{name:'BBC News'},publishedAt:new Date(Date.now()-21600000).toISOString()}],
+    technology:[{title:'OpenAI Releases New Model, Claims Human-Level Reasoning on Benchmarks',source:{name:'TechCrunch'},publishedAt:new Date(Date.now()-3600000).toISOString()},{title:"Apple's Foldable iPhone Confirmed for Later This Year",source:{name:'The Verge'},publishedAt:new Date(Date.now()-7200000).toISOString()},{title:'EU Passes Landmark AI Liability Law, Tech Giants Face New Fines',source:{name:'Reuters'},publishedAt:new Date(Date.now()-10800000).toISOString()},{title:'Quantum Computer Breaks RSA Encryption in Under a Minute',source:{name:'TechCrunch'},publishedAt:new Date(Date.now()-14400000).toISOString()},{title:"Meta's AR Glasses Outsell Smartphones in Key Markets",source:{name:'The Verge'},publishedAt:new Date(Date.now()-18000000).toISOString()},{title:'Self-Driving Taxis Now Outnumber Human-Driven Cabs in Major Cities',source:{name:'TechCrunch'},publishedAt:new Date(Date.now()-21600000).toISOString()}],
+    science:[{title:"Scientists Discover Potential Biosignatures on Europa's Surface",source:{name:'AP News'},publishedAt:new Date(Date.now()-3600000).toISOString()},{title:'New mRNA Cancer Vaccine Shows 94% Success Rate in Phase III Trial',source:{name:'Reuters'},publishedAt:new Date(Date.now()-7200000).toISOString()},{title:'First Direct Observation of Dark Matter Particles Claimed by CERN',source:{name:'BBC News'},publishedAt:new Date(Date.now()-10800000).toISOString()},{title:'Fusion Reactor Achieves Net Energy Gain for 72 Consecutive Hours',source:{name:'AP News'},publishedAt:new Date(Date.now()-14400000).toISOString()},{title:'Ocean Temperatures Hit 140-Year High, Coral Bleaching at Record Scale',source:{name:'BBC News'},publishedAt:new Date(Date.now()-18000000).toISOString()},{title:'De-Extinction Project Successfully Revives Species Using Ancient DNA',source:{name:'Reuters'},publishedAt:new Date(Date.now()-21600000).toISOString()}],
+    health:[{title:'FDA Approves First Pill That Reverses Type 2 Diabetes in Months',source:{name:'Reuters'},publishedAt:new Date(Date.now()-3600000).toISOString()},{title:'New Study Links Ultra-Processed Foods to Early Cognitive Decline',source:{name:'CNN'},publishedAt:new Date(Date.now()-7200000).toISOString()},{title:'Daily Aspirin No Longer Recommended for Heart Disease Prevention',source:{name:'BBC News'},publishedAt:new Date(Date.now()-10800000).toISOString()},{title:'GLP-1 Drugs Now Linked to Reduced Addiction Risk Across All Substances',source:{name:'AP News'},publishedAt:new Date(Date.now()-14400000).toISOString()},{title:'WHO Revises Sugar Guidelines: Even Small Amounts Harmful, Says Report',source:{name:'Reuters'},publishedAt:new Date(Date.now()-18000000).toISOString()},{title:'Sleep Scientists Identify Gene Variant That Eliminates Need for 8 Hours',source:{name:'BBC News'},publishedAt:new Date(Date.now()-21600000).toISOString()}],
+    business:[{title:'Apple Becomes First Company to Hit $5 Trillion Market Valuation',source:{name:'Reuters'},publishedAt:new Date(Date.now()-3600000).toISOString()},{title:'Global Recession Fears Mount as Manufacturing Output Falls for 6th Month',source:{name:'BBC News'},publishedAt:new Date(Date.now()-7200000).toISOString()},{title:'Amazon Acquires Major European Retail Chain in $12B Deal',source:{name:'Reuters'},publishedAt:new Date(Date.now()-10800000).toISOString()},{title:'Bitcoin Surges Past $200,000 Amid Central Bank Digital Currency Doubts',source:{name:'AP News'},publishedAt:new Date(Date.now()-14400000).toISOString()},{title:'Mass Layoffs Hit Wall Street Banks as AI Automates Trading Desks',source:{name:'CNN'},publishedAt:new Date(Date.now()-18000000).toISOString()},{title:'IMF Warns of Sovereign Debt Crisis in Emerging Markets',source:{name:'Reuters'},publishedAt:new Date(Date.now()-21600000).toISOString()}],
+    politics:[{title:'UN Security Council Deadlocked Over Ceasefire Resolution for 8th Week',source:{name:'Reuters'},publishedAt:new Date(Date.now()-3600000).toISOString()},{title:'Snap Election Called as Prime Minister Loses No-Confidence Vote',source:{name:'BBC News'},publishedAt:new Date(Date.now()-7200000).toISOString()},{title:'G7 Nations Agree on Sweeping New Sanctions Package',source:{name:'AP News'},publishedAt:new Date(Date.now()-10800000).toISOString()},{title:'Supreme Court to Rule on Presidential Immunity in Landmark Case',source:{name:'CNN'},publishedAt:new Date(Date.now()-14400000).toISOString()},{title:'Poll: Majority Now Distrust AI-Generated Political Ads',source:{name:'Reuters'},publishedAt:new Date(Date.now()-18000000).toISOString()},{title:'Whistleblower Leaks Show Covert Disinformation Campaign in 14 Countries',source:{name:'BBC News'},publishedAt:new Date(Date.now()-21600000).toISOString()}]
+};
+
+// Load feed initially into the hidden view
+loadFeed('general');
 </script>
 </body>
 </html>
