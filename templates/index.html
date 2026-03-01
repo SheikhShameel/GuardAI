@@ -7,34 +7,13 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,700;1,400&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+    
     <style>
         :root { --green:#22c55e; --orange:#f97316; --purple:#7c6af7; --red:#ef4444; }
         * { box-sizing:border-box; margin:0; padding:0; }
 
         body {
-            background: linear-gradient(
-                180deg,
-                #1a2a35 0%,
-                #1e2d40 8%,
-                #1c3045 15%,
-                #1a3252 22%,
-                #1d3060 30%,
-                #1e2d68 37%,
-                #22306a 43%,
-                #2a3260 50%,
-                #3a3258 57%,
-                #4a3250 63%,
-                #5c3448 68%,
-                #703845 72%,
-                #843d40 76%,
-                #9a4238 80%,
-                #b04a2e 84%,
-                #c05228 88%,
-                #cc5e24 91%,
-                #d46820 94%,
-                #d87018 97%,
-                #da7215 100%
-            );
+            background: linear-gradient(180deg,#1a2a35 0%,#1e2d40 8%,#1c3045 15%,#1a3252 22%,#1d3060 30%,#1e2d68 37%,#22306a 43%,#2a3260 50%,#3a3258 57%,#4a3250 63%,#5c3448 68%,#703845 72%,#843d40 76%,#9a4238 80%,#b04a2e 84%,#c05228 88%,#cc5e24 91%,#d46820 94%,#d87018 97%,#da7215 100%);
             background-attachment: fixed;
             min-height: 100vh;
             color:#9ca3af;
@@ -64,6 +43,28 @@
         .card-gradient-orange { background:linear-gradient(135deg,rgba(249,115,22,0.08) 0%,rgba(0,0,0,0) 100%); }
         .border-subtle { border-color:rgba(255,255,255,0.10); }
 
+        /* ── LOGO BOX ── */
+        .logo-box {
+            display: flex;
+            align-items: center;
+            gap: 0px;
+        }
+        .logo-img {
+            width: 74px;
+            height: 74px;
+            object-fit: contain;
+            filter: brightness(0) invert(1);
+            flex-shrink: 0;
+        }
+        .logo-name {
+            font-family: 'Syne',Verdana, Geneva, Tahoma, sans-serif;
+            font-size: 20px;
+            font-weight: 700;
+            color: #ffffff;
+            letter-spacing: 0.1px; 
+        }
+        .collapsed-sidebar .logo-box { display: none; }
+
         #sidebar {
             transition:width 0.3s cubic-bezier(0.4,0,0.2,1);
             overflow-x:hidden;
@@ -74,21 +75,11 @@
         .sidebar-text { transition:opacity 0.2s ease; opacity:1; }
         .collapsed-sidebar .sidebar-text { opacity:0; display:none; }
         .collapsed-sidebar .header-container { justify-content:center; }
-        .collapsed-sidebar .logo-box { display:none; }
         .no-scrollbar::-webkit-scrollbar { display:none; }
         .no-scrollbar { -ms-overflow-style:none; scrollbar-width:none; }
 
-        main {
-            position: relative;
-            z-index: 5;
-        }
-        main::before {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background: rgba(0, 0, 0, 0.18);
-            pointer-events: none;
-        }
+        main { position: relative; z-index: 5; }
+        main::before { content:''; position:absolute; inset:0; background:rgba(0,0,0,0.18); pointer-events:none; }
 
         .thinking-bubble { display:flex; align-items:center; gap:6px; padding:14px 20px; background:rgba(15,20,30,0.75); backdrop-filter:blur(16px); border:1px solid rgba(255,255,255,0.10); border-radius:20px 20px 20px 4px; width:fit-content; }
         .thinking-dot { width:7px; height:7px; border-radius:50%; background:#333; animation:think 1.4s infinite ease-in-out; }
@@ -130,17 +121,7 @@
         .home-btn-bottom { position:fixed; bottom:26px; left:26px; width:44px; height:44px; background:#161616; border:1px solid rgba(255,255,255,0.1); border-radius:14px; display:flex; align-items:center; justify-content:center; color:#6b7280; transition:all 0.25s ease; z-index:40; cursor:pointer; }
         .home-btn-bottom:hover { background:#222; color:#e5e7eb; border-color:rgba(255,255,255,0.2); transform:scale(1.05); }
 
-        .upload-modal-box {
-            background: rgba(20, 24, 36, 0.92);
-            backdrop-filter: blur(32px) saturate(1.5);
-            -webkit-backdrop-filter: blur(32px) saturate(1.5);
-            border:1px solid rgba(255,255,255,0.10);
-            border-radius:20px;
-            padding:28px;
-            width:340px;
-            position:relative;
-            box-shadow:0 40px 80px rgba(0,0,0,0.7);
-        }
+        .upload-modal-box { background:rgba(20,24,36,0.92); backdrop-filter:blur(32px) saturate(1.5); -webkit-backdrop-filter:blur(32px) saturate(1.5); border:1px solid rgba(255,255,255,0.10); border-radius:20px; padding:28px; width:340px; position:relative; box-shadow:0 40px 80px rgba(0,0,0,0.7); }
         .upload-close-btn { position:absolute; top:14px; right:14px; width:28px; height:28px; border-radius:50%; background:#2a2a2a; border:none; color:#777; font-size:13px; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:background 0.2s,color 0.2s; }
         .upload-close-btn:hover { background:#3a3a3a; color:#fff; }
         .drop-zone { border:1.5px dashed #2d2d2d; border-radius:14px; background:rgba(10,12,20,0.6); padding:28px 20px 20px; text-align:center; cursor:pointer; transition:border-color 0.2s,background 0.2s; position:relative; overflow:hidden; min-height:175px; display:flex; flex-direction:column; align-items:center; justify-content:center; }
@@ -173,23 +154,9 @@
         .detail-text { font-size:11.5px; color:#9ca3af; line-height:1.6; }
         .trusted-pill { display:inline-block; background:rgba(34,197,94,0.1); border:1px solid rgba(34,197,94,0.2); color:#22c55e; font-size:9px; font-weight:700; padding:1px 7px; border-radius:20px; text-transform:uppercase; letter-spacing:0.05em; margin:2px 3px 2px 0; }
 
-        .mode-card {
-            backdrop-filter: blur(16px) saturate(1.4);
-            -webkit-backdrop-filter: blur(16px) saturate(1.4);
-            background: rgba(10, 15, 25, 0.55);
-        }
-
-        .bottom-bar-glass {
-            background: rgba(12, 16, 28, 0.78);
-            backdrop-filter: blur(24px) saturate(1.4);
-            -webkit-backdrop-filter: blur(24px) saturate(1.4);
-        }
-
-        .status-badge-glass {
-            background: rgba(255,255,255,0.07);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-        }
+        .mode-card { backdrop-filter:blur(16px) saturate(1.4); -webkit-backdrop-filter:blur(16px) saturate(1.4); background:rgba(10,15,25,0.55); }
+        .bottom-bar-glass { background:rgba(12,16,28,0.78); backdrop-filter:blur(24px) saturate(1.4); -webkit-backdrop-filter:blur(24px) saturate(1.4); }
+        .status-badge-glass { background:rgba(255,255,255,0.07); backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px); }
     </style>
 </head>
 
@@ -197,19 +164,26 @@
 
 <!-- SIDEBAR -->
 <aside id="sidebar" class="w-64 bg-sidebar border-r border-subtle flex flex-col p-4 shrink-0">
+
+    <!-- HEADER: logo left, toggle button right -->
     <div class="flex items-center justify-between mb-8 px-2 header-container">
-        <div class="flex items-center gap-2 logo-box">
-            <div class="w-6 h-6 bg-gradient-to-tr from-green-400 to-blue-500 rounded-md"></div>
-            <span class="font-syne text-sm font-bold text-white sidebar-text tracking-wide">GuardAI</span>
+
+        <!-- LOGO: PNG + text -->
+        <div class="logo-box">
+            <img src="images/glareailogo.png" alt="Glare AI" class="logo-img" />
+            <span class="logo-name">Glare AI</span>
         </div>
-        <button onclick="toggleSidebar()" class="p-1.5 hover:bg-white/10 rounded-lg text-gray-500">
+
+        <button onclick="toggleSidebar()" class="p-1.5 hover:bg-white/10 rounded-lg text-gray-500 shrink-0">
             <i data-lucide="panel-left-close" id="toggle-icon" class="w-4 h-4"></i>
         </button>
     </div>
+
     <button onclick="resetToHome()" class="flex items-center justify-center lg:justify-start gap-2 bg-white/5 border border-white/10 py-2.5 px-4 rounded-xl mb-8 text-white w-full hover:bg-white/10 transition-all backdrop-blur-sm">
         <i data-lucide="plus" class="w-4 h-4"></i>
         <span class="text-sm font-medium sidebar-text">New Session</span>
     </button>
+
     <nav class="flex-1 overflow-y-auto no-scrollbar">
         <h3 class="text-[10px] uppercase tracking-widest text-gray-600 font-bold mb-3 px-2 sidebar-text">History</h3>
         <div id="recent-scans-list" class="space-y-1"></div>
@@ -243,7 +217,61 @@
                 <div class="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse"></div>
                 <span class="text-[11px] text-gray-300 uppercase tracking-widest font-medium">Generative Lie And Reality Evaluator</span>
             </div>
-            <h1 class="font-syne text-5xl font-extrabold text-white mb-3 tracking-tight drop-shadow-lg">Glare AI</h1>
+            <!-- Kinetic typography animation -->
+<div id="kinetic-line" style="display:flex;align-items:baseline;gap:0;font-family:'Syne',sans-serif;font-size:clamp(28px,4vw,48px);color:rgba(255,255,255,0.92);font-weight:300;letter-spacing:0.01em;white-space:nowrap;margin-bottom:12px;justify-content:center;">
+    <span style="font-weight:300;color:rgba(255,255,255,0.92);">It's not just a </span>
+    <span id="kinetic-word" style="font-weight:800;color:#ffffff;margin-left:0.3em;"></span>
+    <span id="kinetic-cursor" style="display:inline-block;width:3px;height:1.1em;background:rgba(255,255,255,0.85);margin-left:3px;vertical-align:middle;position:relative;top:-2px;animation:kineticBlink 0.53s steps(1) infinite;"></span>
+</div>
+<style>
+@keyframes kineticBlink { 0%,100%{opacity:1} 50%{opacity:0} }
+</style>
+<script>
+(function(){
+    const WORDS=['deepfake.','lie.','Identitytheft.','fake.','hoax.','Misinfo.'];
+    const wordEl=document.getElementById('kinetic-word');
+    const cursor=document.getElementById('kinetic-cursor');
+    const line=document.getElementById('kinetic-line');
+    let wi=0;
+    const sl=ms=>new Promise(r=>setTimeout(r,ms));
+    async function typeWord(text){
+        wordEl.textContent='';
+        cursor.style.animation='kineticBlink 0.53s steps(1) infinite';
+        for(let i=0;i<text.length;i++){
+            wordEl.textContent=text.slice(0,i+1);
+            await sl(text[i]==='.'?80:65);
+        }
+        cursor.style.animation='none';
+        cursor.style.opacity='0';
+    }
+    async function blurOut(){
+        line.style.transition='opacity 280ms ease-in,filter 280ms ease-in';
+        line.style.opacity='0';line.style.filter='blur(8px)';
+        await sl(280);
+    }
+    async function blurIn(){
+        line.style.transition='none';line.style.filter='blur(4px)';line.style.opacity='0';
+        wordEl.textContent='';cursor.style.opacity='1';
+        await sl(20);
+        line.style.transition='opacity 180ms ease-out,filter 180ms ease-out';
+        line.style.opacity='1';line.style.filter='blur(0px)';
+        await sl(180);
+    }
+    async function run(){
+        await sl(400);
+        line.style.opacity='1';
+        cursor.style.opacity='1';
+        while(true){
+            await typeWord(WORDS[wi%WORDS.length]);
+            await sl(1100);
+            await blurOut();
+            wi++;
+            await blurIn();
+        }
+    }
+    run();
+})();
+</script>
             <p class="text-gray-300 text-sm max-w-sm mx-auto leading-relaxed drop-shadow">Verified forensic node analysis for media and text integrity. Truth, decoded.</p>
         </div>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-5 w-full max-w-2xl mb-12">
@@ -265,17 +293,12 @@
     </div>
 
     <!-- CHAT VIEW -->
-    <div id="chat-view"
-         class="hidden w-full max-w-2xl flex-col gap-5 overflow-y-auto no-scrollbar scroll-smooth pt-8 pb-36 relative z-10"
-         style="flex:1; min-height:0;"></div>
+    <div id="chat-view" class="hidden w-full max-w-2xl flex-col gap-5 overflow-y-auto no-scrollbar scroll-smooth pt-8 pb-36 relative z-10" style="flex:1; min-height:0;"></div>
 
     <!-- TEXT BAR -->
     <div id="text-bar" class="hidden w-full max-w-xl bottom-bar-glass border border-white/[0.10] rounded-2xl p-4 absolute bottom-8 z-10 shadow-2xl">
         <div class="flex items-center gap-3">
-            <input id="newsInput" type="text"
-                   placeholder="Enter headline or text claim…"
-                   class="bg-transparent border-none outline-none w-full text-sm text-gray-200 placeholder-gray-500"
-                   onkeypress="if(event.key==='Enter') startTextAnalysis()">
+            <input id="newsInput" type="text" placeholder="Enter headline or text claim…" class="bg-transparent border-none outline-none w-full text-sm text-gray-200 placeholder-gray-500" onkeypress="if(event.key==='Enter') startTextAnalysis()">
             <div onclick="startTextAnalysis()" class="bg-green-500 p-2 rounded-full text-black cursor-pointer hover:bg-green-400 transition-colors shrink-0">
                 <i data-lucide="arrow-right" class="w-4 h-4"></i>
             </div>
@@ -348,7 +371,6 @@ function toggleSidebar() {
 function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 function escapeHtml(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
-/* ── Mode switching ── */
 function switchToTextMode() {
     currentMode = 'text'; _showChat();
     document.getElementById('text-bar').classList.remove('hidden');
@@ -374,37 +396,30 @@ function resetToHome() {
     document.getElementById('image-bar').classList.add('hidden');
 }
 
-/* ══════════ TEXT ANALYSIS ══════════ */
 async function startTextAnalysis() {
     const input = document.getElementById('newsInput');
     const query = input.value.trim(); if (!query) return;
     input.value = ''; input.placeholder = 'Scanning nodes…';
     const chat = document.getElementById('chat-view');
-
     const bubble = document.createElement('div');
     bubble.className = 'text-claim'; bubble.style.alignSelf = 'flex-end';
     bubble.innerHTML = `<p class="text-sm text-gray-200 italic leading-relaxed">"${escapeHtml(query)}"</p>`;
     chat.appendChild(bubble); chat.scrollTo({ top: chat.scrollHeight, behavior: 'smooth' });
-
     await sleep(380);
     const dots = document.createElement('div');
     dots.className = 'thinking-bubble';
     dots.innerHTML = `<div class="thinking-dot"></div><div class="thinking-dot"></div><div class="thinking-dot"></div>`;
     chat.appendChild(dots); chat.scrollTo({ top: chat.scrollHeight, behavior: 'smooth' });
-
     try {
         const [res] = await Promise.all([
             fetch('/analyze-news', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ query }) }),
             sleep(1400)
         ]);
-
-        // ── FIX: check for non-JSON / auth redirect ──
         const contentType = res.headers.get('content-type') || '';
         if (!contentType.includes('application/json')) {
             if (res.status === 401 || res.redirected) { window.location.href = '/'; return; }
             throw new Error(`Server returned non-JSON response (status ${res.status})`);
         }
-
         const result = await res.json();
         if (result.error) throw new Error(result.error);
         dots.remove();
@@ -424,7 +439,7 @@ async function startTextAnalysis() {
                 <i data-lucide="wifi-off" class="w-8 h-8 text-red-500 shrink-0"></i>
                 <div>
                     <p class="font-syne font-bold text-white mb-1">Node Connection Failed</p>
-                    <p class="text-xs text-gray-500">Could not reach GuardAI backend. Make sure Flask is running on <code class="text-gray-400">localhost:5000</code>.</p>
+                    <p class="text-xs text-gray-500">Could not reach GuardAI backend.</p>
                     <p class="text-[10px] text-red-500/70 mt-2 font-mono">${escapeHtml(err.message)}</p>
                 </div>
             </div>
@@ -434,7 +449,6 @@ async function startTextAnalysis() {
     } finally { input.placeholder = 'Enter headline or text claim…'; }
 }
 
-/* ══════════ TEXT CARD ══════════ */
 function classifyLabel(raw) {
     const u = (raw || '').toUpperCase();
     if (u === 'REAL') return 'real';
@@ -457,34 +471,21 @@ function buildTextCard(data) {
             : 'background:rgba(34,197,94,0.12);color:#22c55e;border:1px solid rgba(34,197,94,0.25)';
     const headline = data.verdict || (isFake ? 'Claim Disputed' : isUncert ? 'Insufficient Evidence' : 'Claim Verified');
     const conf = Math.round(data.confidence);
-
     const ev = data.evidence || {};
-    const articlesFound   = ev.articles_found  ?? '—';
-    const googleResults   = ev.google_results  ?? '—';
-    const googleTrust     = ev.google_trust     ?? false;
-    const trustedSources  = ev.trusted_sources  ?? [];
-    const googleMatch     = ev.google_match     != null ? (ev.google_match * 100).toFixed(0) + '%' : '—';
-    const agreementScore  = ev.agreement        != null ? (ev.agreement    * 100).toFixed(0) + '%' : '—';
-
+    const articlesFound = ev.articles_found ?? '—';
+    const googleResults = ev.google_results ?? '—';
+    const googleTrust   = ev.google_trust   ?? false;
+    const trustedSources= ev.trusted_sources ?? [];
+    const googleMatch   = ev.google_match  != null ? (ev.google_match * 100).toFixed(0) + '%' : '—';
     const fc = ev.fact_check || {};
-    const fcBadge = fc.found
-        ? `<span class="trusted-pill" style="background:rgba(124,106,247,0.15);color:#a89bf7;border-color:rgba(124,106,247,0.3)">Fact-checked: ${escapeHtml(fc.rating || '').substring(0, 30)}</span>`
-        : '';
-
-    const sourcePills = trustedSources.slice(0, 5).map(s =>
-        `<span class="trusted-pill">${escapeHtml(s)}</span>`).join('');
-
+    const fcBadge = fc.found ? `<span class="trusted-pill" style="background:rgba(124,106,247,0.15);color:#a89bf7;border-color:rgba(124,106,247,0.3)">Fact-checked: ${escapeHtml(fc.rating || '').substring(0,30)}</span>` : '';
+    const sourcePills = trustedSources.slice(0,5).map(s=>`<span class="trusted-pill">${escapeHtml(s)}</span>`).join('');
     const details = data.details || [];
     const detailHtml = details.map(d => {
         const icon = d.startsWith('✔') ? '✔' : d.startsWith('✘') ? '✘' : '~';
         const color = icon === '✔' ? '#22c55e' : icon === '✘' ? '#ef4444' : '#f59e0b';
-        const text = d.substring(2);
-        return `<div class="detail-line">
-            <span class="detail-icon" style="color:${color}">${icon}</span>
-            <span class="detail-text">${text}</span>
-        </div>`;
+        return `<div class="detail-line"><span class="detail-icon" style="color:${color}">${icon}</span><span class="detail-text">${d.substring(2)}</span></div>`;
     }).join('');
-
     return `<div class="${vClass} forensic-card-wrap mb-2">
         <div class="scan-overlay"></div><div class="glow-line"></div>
         <div class="p-7">
@@ -498,218 +499,111 @@ function buildTextCard(data) {
                 </div>
                 <span class="text-[10px] font-bold uppercase tracking-widest px-3 py-1.5 rounded-full" style="${tagStyle}">${tag}</span>
             </div>
-
             <div class="flex items-end gap-5 mb-2">
                 <span class="verdict-score count-up" style="color:${accent};text-shadow:0 0 50px ${accent}40">0</span>
                 <div class="mb-3 flex-1 min-w-0">
                     <p class="font-syne text-xl font-extrabold text-white leading-tight">${headline}</p>
-                    <div class="mt-2 flex flex-wrap gap-1">
-                        ${fcBadge}
-                        ${sourcePills || `<span class="text-[10px] text-gray-700">${googleTrust ? '' : 'No trusted sources detected'}</span>`}
-                    </div>
+                    <div class="mt-2 flex flex-wrap gap-1">${fcBadge}${sourcePills || `<span class="text-[10px] text-gray-700">${googleTrust ? '' : 'No trusted sources detected'}</span>`}</div>
                 </div>
             </div>
-
             <div class="flex justify-between text-[9px] text-gray-600 uppercase tracking-wider mb-1.5"><span>Confidence Score</span><span>${conf}%</span></div>
             <div class="h-1.5 bg-white/5 rounded-full overflow-hidden mb-6"><div class="h-full bar-fill rounded-full" style="width:${conf}%;background:linear-gradient(90deg,${accent}55,${accent})"></div></div>
-
             <div class="grid grid-cols-2 gap-3 mb-5">
-                <div class="node-cell">
-                    <p class="node-cell-label">Google Results</p>
-                    <p class="node-cell-value">${googleResults} <span class="text-xs text-gray-600 font-normal">results</span></p>
-                </div>
-                <div class="node-cell">
-                    <p class="node-cell-label">Best Match</p>
-                    <p class="node-cell-value" style="color:${accent}">${googleMatch}</p>
-                </div>
-                <div class="node-cell">
-                    <p class="node-cell-label">News APIs</p>
-                    <p class="node-cell-value">${articlesFound} <span class="text-xs text-gray-600 font-normal">articles</span></p>
-                </div>
-                <div class="node-cell">
-                    <p class="node-cell-label">Trusted Source</p>
-                    <p class="node-cell-value text-sm" style="color:${googleTrust ? '#22c55e' : '#555'}">${googleTrust ? 'Confirmed ✔' : 'None Found'}</p>
-                </div>
+                <div class="node-cell"><p class="node-cell-label">Google Results</p><p class="node-cell-value">${googleResults} <span class="text-xs text-gray-600 font-normal">results</span></p></div>
+                <div class="node-cell"><p class="node-cell-label">Best Match</p><p class="node-cell-value" style="color:${accent}">${googleMatch}</p></div>
+                <div class="node-cell"><p class="node-cell-label">News APIs</p><p class="node-cell-value">${articlesFound} <span class="text-xs text-gray-600 font-normal">articles</span></p></div>
+                <div class="node-cell"><p class="node-cell-label">Trusted Source</p><p class="node-cell-value text-sm" style="color:${googleTrust ? '#22c55e' : '#555'}">${googleTrust ? 'Confirmed ✔' : 'None Found'}</p></div>
             </div>
-
             <div style="background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:14px 16px;">
-                <div class="flex items-center gap-2 mb-3">
-                    <div class="w-1.5 h-1.5 rounded-full" style="background:${accent}"></div>
-                    <p class="text-[9px] uppercase tracking-widest text-gray-600 font-bold">Verdict reasoning — all signals</p>
-                </div>
-                ${detailHtml || `<p class="text-[11px] text-gray-600">No detailed signals available. Add your Google API keys to the backend for full analysis.</p>`}
+                <div class="flex items-center gap-2 mb-3"><div class="w-1.5 h-1.5 rounded-full" style="background:${accent}"></div><p class="text-[9px] uppercase tracking-widest text-gray-600 font-bold">Verdict reasoning</p></div>
+                ${detailHtml || `<p class="text-[11px] text-gray-600">No detailed signals available.</p>`}
             </div>
         </div>
         <div class="glow-line" style="opacity:0.15"></div>
     </div>`;
 }
 
-/* ══════════ IMAGE CARD — FULLY USES BACKEND DATA ══════════ */
 function buildImageCard(data) {
     const isReal = (data.label || '').toUpperCase() === 'REAL';
     const rawLabel = (data.raw_label || data.label || '').toUpperCase();
-
-    // Determine color theme
     let accent, vClass, tag, tagStyle;
     if (isReal) {
-        accent = '#22c55e'; vClass = 'verdict-real';
-        tag = 'AUTHENTIC';
-        tagStyle = 'background:rgba(34,197,94,0.1);color:#22c55e;border:1px solid rgba(34,197,94,0.2)';
-    } else if (rawLabel === 'DEEPFAKE') {
-        accent = '#ef4444'; vClass = 'verdict-fake';
-        tag = 'DEEPFAKE';
-        tagStyle = 'background:rgba(239,68,68,0.1);color:#ef4444;border:1px solid rgba(239,68,68,0.2)';
-    } else if (rawLabel === 'MANIPULATED') {
-        accent = '#f97316'; vClass = 'verdict-fake';
-        tag = 'MANIPULATED';
-        tagStyle = 'background:rgba(249,115,22,0.1);color:#f97316;border:1px solid rgba(249,115,22,0.2)';
+        accent='#22c55e'; vClass='verdict-real'; tag='AUTHENTIC';
+        tagStyle='background:rgba(34,197,94,0.1);color:#22c55e;border:1px solid rgba(34,197,94,0.2)';
+    } else if (rawLabel==='DEEPFAKE') {
+        accent='#ef4444'; vClass='verdict-fake'; tag='DEEPFAKE';
+        tagStyle='background:rgba(239,68,68,0.1);color:#ef4444;border:1px solid rgba(239,68,68,0.2)';
+    } else if (rawLabel==='MANIPULATED') {
+        accent='#f97316'; vClass='verdict-fake'; tag='MANIPULATED';
+        tagStyle='background:rgba(249,115,22,0.1);color:#f97316;border:1px solid rgba(249,115,22,0.2)';
     } else {
-        accent = '#ef4444'; vClass = 'verdict-fake';
-        tag = 'AI GENERATED';
-        tagStyle = 'background:rgba(239,68,68,0.1);color:#ef4444;border:1px solid rgba(239,68,68,0.2)';
+        accent='#ef4444'; vClass='verdict-fake'; tag='AI GENERATED';
+        tagStyle='background:rgba(239,68,68,0.1);color:#ef4444;border:1px solid rgba(239,68,68,0.2)';
     }
-
     const verdict = data.verdict || (isReal ? 'Content Verified' : 'Synthetic Media Detected');
-    const summary = data.summary || (isReal
-        ? 'Neural node consensus indicates this image exhibits authentic characteristics consistent with real-world capture.'
-        : 'Forensic analysis detected synthetic generation patterns. Neural signatures indicate AI-produced or manipulated media.');
-
+    const summary = data.summary || (isReal ? 'Neural node consensus indicates authentic characteristics.' : 'Forensic analysis detected synthetic generation patterns.');
     const conf = Math.round(data.confidence || 0);
-    const r = 44, circ = +(2 * Math.PI * r).toFixed(2);
-
-    // Forensic scores from backend
+    const r=44, circ=+(2*Math.PI*r).toFixed(2);
     const fs = data.forensic_score || {};
-    const texScore  = fs.texture_analysis     ?? null;
-    const lightScore= fs.lighting_consistency ?? null;
-    const faceScore = fs.facial_coherence     ?? null;
-    const noiseScore= fs.noise_pattern        ?? null;
-
-    function scoreBar(val, label) {
-        if (val === null) return '';
-        const c = val >= 70 ? '#22c55e' : val >= 40 ? '#f59e0b' : '#ef4444';
-        return `<div class="node-cell">
-            <p class="node-cell-label">${label}</p>
-            <p class="node-cell-value" style="color:${c}">${val}<span class="text-xs text-gray-600 font-normal">/100</span></p>
-            <div class="mt-2 h-1 bg-white/5 rounded-full overflow-hidden">
-                <div class="h-full bar-fill rounded-full" style="width:${val}%;background:${c};opacity:0.8"></div>
-            </div>
-        </div>`;
+    const texScore=fs.texture_analysis??null, lightScore=fs.lighting_consistency??null, faceScore=fs.facial_coherence??null, noiseScore=fs.noise_pattern??null;
+    function scoreBar(val,label) {
+        if(val===null)return '';
+        const c=val>=70?'#22c55e':val>=40?'#f59e0b':'#ef4444';
+        return `<div class="node-cell"><p class="node-cell-label">${label}</p><p class="node-cell-value" style="color:${c}">${val}<span class="text-xs text-gray-600 font-normal">/100</span></p><div class="mt-2 h-1 bg-white/5 rounded-full overflow-hidden"><div class="h-full bar-fill rounded-full" style="width:${val}%;background:${c};opacity:0.8"></div></div></div>`;
     }
-
-    // Artifacts from backend
     const artifacts = data.artifacts || [];
-    const artifactHtml = artifacts.length > 0
-        ? artifacts.map(a => `<span class="trusted-pill" style="background:rgba(239,68,68,0.1);color:#ef4444;border-color:rgba(239,68,68,0.2)">${escapeHtml(a)}</span>`).join('')
-        : '';
-
-    // Signals / details from backend
+    const artifactHtml = artifacts.length>0 ? artifacts.map(a=>`<span class="trusted-pill" style="background:rgba(239,68,68,0.1);color:#ef4444;border-color:rgba(239,68,68,0.2)">${escapeHtml(a)}</span>`).join('') : '';
     const details = data.details || [];
-    const detailHtml = details.map(d => {
-        const icon = d.startsWith('✔') ? '✔' : d.startsWith('✘') ? '✘' : '~';
-        const color = icon === '✔' ? '#22c55e' : icon === '✘' ? '#ef4444' : '#f59e0b';
-        const text = d.substring(2);
-        return `<div class="detail-line">
-            <span class="detail-icon" style="color:${color}">${icon}</span>
-            <span class="detail-text">${escapeHtml(text)}</span>
-        </div>`;
+    const detailHtml = details.map(d=>{
+        const icon=d.startsWith('✔')?'✔':d.startsWith('✘')?'✘':'~';
+        const color=icon==='✔'?'#22c55e':icon==='✘'?'#ef4444':'#f59e0b';
+        return `<div class="detail-line"><span class="detail-icon" style="color:${color}">${icon}</span><span class="detail-text">${escapeHtml(d.substring(2))}</span></div>`;
     }).join('');
-
-    // Generation model / manipulation type pills
     const metaPills = [
-        data.generation_model ? `<span class="trusted-pill" style="background:rgba(124,106,247,0.12);color:#a89bf7;border-color:rgba(124,106,247,0.3)">Model: ${escapeHtml(data.generation_model)}</span>` : '',
-        data.manipulation_type ? `<span class="trusted-pill" style="background:rgba(249,115,22,0.1);color:#f97316;border-color:rgba(249,115,22,0.2)">Type: ${escapeHtml(data.manipulation_type)}</span>` : '',
-        data.powered_by ? `<span class="trusted-pill" style="background:rgba(255,255,255,0.05);color:#555;border-color:rgba(255,255,255,0.08)">${escapeHtml(data.powered_by)}</span>` : ''
+        data.generation_model?`<span class="trusted-pill" style="background:rgba(124,106,247,0.12);color:#a89bf7;border-color:rgba(124,106,247,0.3)">Model: ${escapeHtml(data.generation_model)}</span>`:'',
+        data.manipulation_type?`<span class="trusted-pill" style="background:rgba(249,115,22,0.1);color:#f97316;border-color:rgba(249,115,22,0.2)">Type: ${escapeHtml(data.manipulation_type)}</span>`:'',
+        data.powered_by?`<span class="trusted-pill" style="background:rgba(255,255,255,0.05);color:#555;border-color:rgba(255,255,255,0.08)">${escapeHtml(data.powered_by)}</span>`:''
     ].filter(Boolean).join('');
-
-    const hasForensicScores = texScore !== null || lightScore !== null || faceScore !== null || noiseScore !== null;
-
+    const hasForensicScores = texScore!==null||lightScore!==null||faceScore!==null||noiseScore!==null;
     return `<div class="${vClass} forensic-card-wrap mb-2">
         <div class="scan-overlay"></div><div class="glow-line"></div>
         <div class="p-7">
-
-            <!-- Header -->
             <div class="flex items-center justify-between mb-7">
                 <div class="flex items-center gap-3">
-                    <div class="w-8 h-8 bg-gradient-to-tr from-green-400 to-blue-500 rounded-lg flex items-center justify-center">
-                        <i data-lucide="shield-check" class="w-4 h-4 text-white"></i>
-                    </div>
-                    <div>
-                        <p class="font-syne text-xs font-bold text-gray-500 uppercase tracking-widest">GuardAI Forensics</p>
-                        <p class="text-[10px] text-gray-700">GPT-4o Vision · Neural Analysis</p>
-                    </div>
+                    <div class="w-8 h-8 bg-gradient-to-tr from-green-400 to-blue-500 rounded-lg flex items-center justify-center"><i data-lucide="shield-check" class="w-4 h-4 text-white"></i></div>
+                    <div><p class="font-syne text-xs font-bold text-gray-500 uppercase tracking-widest">GuardAI Forensics</p><p class="text-[10px] text-gray-700">GPT-4o Vision · Neural Analysis</p></div>
                 </div>
                 <span class="text-[10px] font-bold uppercase tracking-widest px-3 py-1.5 rounded-full" style="${tagStyle}">${tag}</span>
             </div>
-
-            <!-- Arc + verdict -->
             <div class="flex items-center gap-7 mb-6">
                 <div class="relative shrink-0">
                     <svg width="110" height="110" class="arc-ring">
                         <circle cx="55" cy="55" r="${r}" fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="5"/>
-                        <circle cx="55" cy="55" r="${r}" fill="none" stroke="${accent}" stroke-width="5"
-                            stroke-dasharray="${circ}" stroke-dashoffset="${circ}" stroke-linecap="round"
-                            transform="rotate(-90 55 55)"
-                            style="transition:stroke-dashoffset 1.2s cubic-bezier(0.4,0,0.2,1) 0.2s;"
-                            id="arcCircle_${data.id}"/>
+                        <circle cx="55" cy="55" r="${r}" fill="none" stroke="${accent}" stroke-width="5" stroke-dasharray="${circ}" stroke-dashoffset="${circ}" stroke-linecap="round" transform="rotate(-90 55 55)" style="transition:stroke-dashoffset 1.2s cubic-bezier(0.4,0,0.2,1) 0.2s;" id="arcCircle_${data.id}"/>
                     </svg>
-                    <div class="absolute inset-0 flex flex-col items-center justify-center">
-                        <span class="count-up font-syne font-extrabold text-2xl" style="color:${accent}">0</span>
-                        <span class="text-[9px] text-gray-600 uppercase tracking-wider">%</span>
-                    </div>
+                    <div class="absolute inset-0 flex flex-col items-center justify-center"><span class="count-up font-syne font-extrabold text-2xl" style="color:${accent}">0</span><span class="text-[9px] text-gray-600 uppercase tracking-wider">%</span></div>
                 </div>
                 <div>
                     <p class="font-syne text-2xl font-extrabold text-white mb-2 leading-tight">${escapeHtml(verdict)}</p>
                     <p class="text-xs text-gray-500 leading-relaxed max-w-xs">${escapeHtml(summary)}</p>
-                    ${metaPills ? `<div class="mt-3 flex flex-wrap gap-1">${metaPills}</div>` : ''}
+                    ${metaPills?`<div class="mt-3 flex flex-wrap gap-1">${metaPills}</div>`:''}
                 </div>
             </div>
-
-            <!-- Confidence bar -->
-            <div class="flex justify-between text-[9px] text-gray-600 uppercase tracking-wider mb-1.5">
-                <span>Confidence Signal</span><span>${conf}%</span>
-            </div>
-            <div class="h-1 bg-white/5 rounded-full overflow-hidden mb-5">
-                <div class="h-full bar-fill rounded-full" style="width:${conf}%;background:${accent};opacity:0.9"></div>
-            </div>
-
-            <!-- Forensic Score Grid -->
-            ${hasForensicScores ? `
-            <div class="grid grid-cols-2 gap-3 mb-5">
-                ${scoreBar(texScore,   'Texture Analysis')}
-                ${scoreBar(lightScore, 'Lighting Consistency')}
-                ${scoreBar(faceScore,  'Facial Coherence')}
-                ${scoreBar(noiseScore, 'Noise Pattern')}
-            </div>` : ''}
-
-            <!-- Artifacts -->
-            ${artifactHtml ? `
-            <div style="background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:12px 14px;margin-bottom:14px;">
-                <p class="text-[9px] uppercase tracking-widest text-gray-600 font-bold mb-2">Detected Artifacts</p>
-                <div class="flex flex-wrap gap-1">${artifactHtml}</div>
-            </div>` : ''}
-
-            <!-- Signals -->
-            ${detailHtml ? `
-            <div style="background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:14px 16px;">
-                <div class="flex items-center gap-2 mb-3">
-                    <div class="w-1.5 h-1.5 rounded-full" style="background:${accent}"></div>
-                    <p class="text-[9px] uppercase tracking-widest text-gray-600 font-bold">Forensic Signals</p>
-                </div>
-                ${detailHtml}
-            </div>` : ''}
-
+            <div class="flex justify-between text-[9px] text-gray-600 uppercase tracking-wider mb-1.5"><span>Confidence Signal</span><span>${conf}%</span></div>
+            <div class="h-1 bg-white/5 rounded-full overflow-hidden mb-5"><div class="h-full bar-fill rounded-full" style="width:${conf}%;background:${accent};opacity:0.9"></div></div>
+            ${hasForensicScores?`<div class="grid grid-cols-2 gap-3 mb-5">${scoreBar(texScore,'Texture Analysis')}${scoreBar(lightScore,'Lighting Consistency')}${scoreBar(faceScore,'Facial Coherence')}${scoreBar(noiseScore,'Noise Pattern')}</div>`:''}
+            ${artifactHtml?`<div style="background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:12px 14px;margin-bottom:14px;"><p class="text-[9px] uppercase tracking-widest text-gray-600 font-bold mb-2">Detected Artifacts</p><div class="flex flex-wrap gap-1">${artifactHtml}</div></div>`:''}
+            ${detailHtml?`<div style="background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:14px 16px;"><div class="flex items-center gap-2 mb-3"><div class="w-1.5 h-1.5 rounded-full" style="background:${accent}"></div><p class="text-[9px] uppercase tracking-widest text-gray-600 font-bold">Forensic Signals</p></div>${detailHtml}</div>`:''}
         </div>
         <div class="glow-line" style="opacity:0.15"></div>
     </div>`;
 }
 
-/* ══════════ IMAGE FLOW ══════════ */
 async function renderImageFlow(data) {
     const chat = document.getElementById('chat-view');
     const bubble = document.createElement('div');
     bubble.className = 'user-message-bubble'; bubble.style.alignSelf = 'flex-end';
-    bubble.innerHTML = `<img src="${data.imgData}" class="rounded-xl w-full object-cover max-h-52">
-        <p class="text-[10px] text-gray-600 mt-2 px-1 flex items-center gap-1"><i data-lucide="image" class="w-3 h-3"></i> ${escapeHtml(data.filename)}</p>`;
+    bubble.innerHTML = `<img src="${data.imgData}" class="rounded-xl w-full object-cover max-h-52"><p class="text-[10px] text-gray-600 mt-2 px-1 flex items-center gap-1"><i data-lucide="image" class="w-3 h-3"></i> ${escapeHtml(data.filename)}</p>`;
     chat.appendChild(bubble); lucide.createIcons();
     chat.scrollTo({ top: chat.scrollHeight, behavior: 'smooth' });
     await sleep(380);
@@ -726,11 +620,10 @@ async function renderImageFlow(data) {
     animateCountUp(wrap.querySelector('.count-up'), 0, data.confidence, 1000);
 }
 
-/* ══════════ UTILITIES ══════════ */
 function triggerArc(id, confidence) {
     requestAnimationFrame(() => {
         const arc = document.getElementById('arcCircle_' + id); if (!arc) return;
-        const r = 44, circ = 2 * Math.PI * r;
+        const r=44, circ=2*Math.PI*r;
         arc.style.strokeDashoffset = (circ - circ * confidence / 100).toFixed(2);
     });
 }
@@ -743,115 +636,69 @@ function animateCountUp(el, from, to, duration) {
     })(start);
 }
 
-
-/* IMAGE SUBMIT */
 async function submitImageAnalysis() {
     const fi = document.getElementById('fileInput');
     if (!fi.files[0]) { fi.click(); return; }
     const overlay = document.getElementById('loadingOverlay'), btn = document.getElementById('analyzeBtn');
     overlay.style.display = 'flex'; btn.disabled = true;
     const filename = fi.files[0].name;
-
     try {
-        // STEP 1: Run forensic analysis
         const analysisForm = new FormData();
         analysisForm.append('file', fi.files[0]);
         const res = await fetch('/upload', { method: 'POST', body: analysisForm });
-
         const contentType = res.headers.get('content-type') || '';
         if (!contentType.includes('application/json')) {
             if (res.status === 401 || res.redirected) { window.location.href = '/'; return; }
-            throw new Error(`Server error (HTTP ${res.status}). Check Flask is running and OPENAI_API_KEY is set.`);
+            throw new Error(`Server error (HTTP ${res.status}).`);
         }
         const result = await res.json();
         if (result.error) throw new Error(result.error);
-
-        // STEP 2: Save image + result to DB via /save_image_scan
         const saveForm = new FormData();
         saveForm.append('image', fi.files[0]);
         saveForm.append('result', result.label || 'UNKNOWN');
         saveForm.append('confidence', result.confidence || 0);
-
         let imgServerPath = null;
         try {
             const saveRes = await fetch('/save_image_scan', { method: 'POST', body: saveForm });
-            if (saveRes.ok) {
-                const saveData = await saveRes.json();
-                // Use the actual saved filename returned from backend (has unique prefix)
-                imgServerPath = saveData.file_path || ('/static/uploads/' + filename);
-            }
-        } catch (saveErr) {
-            console.warn('Could not save image to DB:', saveErr);
-        }
-
-        // STEP 3: Use server path as imgData — no base64, no quota issues
-        const data = {
-            ...result,
-            imgData: imgServerPath,
-            filename,
-            type: 'image',
-            id: Date.now()
-        };
-
+            if (saveRes.ok) { const saveData = await saveRes.json(); imgServerPath = saveData.file_path || ('/static/uploads/' + filename); }
+        } catch (saveErr) { console.warn('Could not save image to DB:', saveErr); }
+        const data = { ...result, imgData: imgServerPath, filename, type: 'image', id: Date.now() };
         closeModal();
         saveSession(data, 'Img: ' + filename);
         switchToImageMode();
         await renderImageFlow(data);
         setTimeout(() => triggerArc(data.id, data.confidence), 100);
-
     } catch (err) {
-        closeModal();
-        switchToImageMode();
+        closeModal(); switchToImageMode();
         const chat = document.getElementById('chat-view');
-        const errEl = document.createElement('div');
-        errEl.className = 'forensic-response';
+        const errEl = document.createElement('div'); errEl.className = 'forensic-response';
         errEl.innerHTML = `<div class="forensic-card-wrap verdict-fake mb-2" style="--accent:#ef4444;--accent-dim:rgba(239,68,68,0.08);--accent-glow:rgba(239,68,68,0.2)">
             <div class="glow-line"></div>
             <div class="p-7 flex items-center gap-4">
                 <i data-lucide="wifi-off" class="w-8 h-8 text-red-500 shrink-0"></i>
-                <div>
-                    <p class="font-syne font-bold text-white mb-1">Forensic Node Error</p>
-                    <p class="text-xs text-gray-500">Image analysis failed. Check your OpenAI API key and that Flask is running.</p>
-                    <p class="text-[10px] text-red-500/70 mt-2 font-mono">${escapeHtml(err.message)}</p>
-                </div>
+                <div><p class="font-syne font-bold text-white mb-1">Forensic Node Error</p><p class="text-xs text-gray-500">Image analysis failed.</p><p class="text-[10px] text-red-500/70 mt-2 font-mono">${escapeHtml(err.message)}</p></div>
             </div>
             <div class="glow-line" style="opacity:0.15"></div>
         </div>`;
-        chat.appendChild(errEl);
-        lucide.createIcons();
+        chat.appendChild(errEl); lucide.createIcons();
         chat.scrollTo({ top: chat.scrollHeight, behavior: 'smooth' });
-    } finally {
-        overlay.style.display = 'none';
-        btn.disabled = false;
-    }
+    } finally { overlay.style.display = 'none'; btn.disabled = false; }
 }
 
-/* ══════════ SESSIONS ══════════ */
 function saveSession(data, title) {
     if (!currentSessionId) { currentSessionId = 'session-' + Date.now(); addSidebarEntry(currentSessionId, title, data.type); }
-
-    // imgData is now a server path like /static/uploads/filename.jpg — safe to store
     const toSave = { ...data };
-
     try {
         let s = JSON.parse(localStorage.getItem('guardai_sessions') || '{}');
         if (!s[currentSessionId]) s[currentSessionId] = [];
         s[currentSessionId].push(toSave);
         localStorage.setItem('guardai_sessions', JSON.stringify(s));
     } catch (e) {
-        // If still over quota, clear old sessions and try once more
-        console.warn('localStorage quota hit — clearing old sessions');
-        try {
-            localStorage.removeItem('guardai_sessions');
-            const fresh = { [currentSessionId]: [toSave] };
-            localStorage.setItem('guardai_sessions', JSON.stringify(fresh));
-        } catch (e2) {
-            console.warn('localStorage unavailable — session will not persist');
-        }
+        try { localStorage.removeItem('guardai_sessions'); localStorage.setItem('guardai_sessions', JSON.stringify({ [currentSessionId]: [toSave] })); } catch (e2) {}
     }
 }
 function addSidebarEntry(id, title, type) {
-    const list = document.getElementById('recent-scans-list'), icon = type === 'image' ? 'image' : 'file-text';
+    const list = document.getElementById('recent-scans-list'), icon = type==='image'?'image':'file-text';
     const div = document.createElement('div');
     div.id = id; div.className = 'group flex items-center justify-between gap-2 px-2 py-2 hover:bg-white/5 rounded-lg cursor-pointer';
     div.innerHTML = `<div class="flex items-center gap-2 truncate flex-1" onclick="loadSession('${id}')"><i data-lucide="${icon}" class="w-4 h-4 opacity-30 shrink-0"></i><span class="truncate text-[11px] text-gray-500 sidebar-text">${escapeHtml(title)}</span></div><button onclick="event.stopPropagation();deleteSession('${id}')" class="opacity-0 group-hover:opacity-100 p-1 hover:text-red-400 sidebar-text"><i data-lucide="trash-2" class="w-3 h-3"></i></button>`;
@@ -861,26 +708,24 @@ function loadSession(id) {
     const s = JSON.parse(localStorage.getItem('guardai_sessions') || '{}'); if (!s[id]) return;
     currentSessionId = id;
     const firstType = s[id][0]?.type;
-    if (firstType === 'image') switchToImageMode(); else switchToTextMode();
+    if (firstType==='image') switchToImageMode(); else switchToTextMode();
     const chat = document.getElementById('chat-view'); chat.innerHTML = '';
     s[id].forEach(item => {
-        if (item.type === 'image') {
-            const b = document.createElement('div'); b.className = 'user-message-bubble'; b.style.alignSelf = 'flex-end';
-            const imgHtml = item.imgData
-                ? `<img src="${item.imgData}" class="rounded-xl w-full object-cover max-h-52">`
-                : `<div class="rounded-xl w-full flex items-center justify-center bg-white/5 border border-white/10" style="height:60px"><span class="text-[10px] text-gray-600">📷 Image not stored</span></div>`;
-            b.innerHTML = `${imgHtml}<p class="text-[10px] text-gray-600 mt-2 px-1">${escapeHtml(item.filename || 'image')}</p>`;
+        if (item.type==='image') {
+            const b = document.createElement('div'); b.className='user-message-bubble'; b.style.alignSelf='flex-end';
+            const imgHtml = item.imgData ? `<img src="${item.imgData}" class="rounded-xl w-full object-cover max-h-52">` : `<div class="rounded-xl w-full flex items-center justify-center bg-white/5 border border-white/10" style="height:60px"><span class="text-[10px] text-gray-600">📷 Image not stored</span></div>`;
+            b.innerHTML = `${imgHtml}<p class="text-[10px] text-gray-600 mt-2 px-1">${escapeHtml(item.filename||'image')}</p>`;
             chat.appendChild(b);
-            const c = document.createElement('div'); c.className = 'forensic-response'; c.innerHTML = buildImageCard(item);
+            const c = document.createElement('div'); c.className='forensic-response'; c.innerHTML=buildImageCard(item);
             chat.appendChild(c);
-            setTimeout(() => { triggerArc(item.id, item.confidence); animateCountUp(c.querySelector('.count-up'), 0, item.confidence, 800); }, 150);
+            setTimeout(()=>{ triggerArc(item.id,item.confidence); animateCountUp(c.querySelector('.count-up'),0,item.confidence,800); },150);
         } else {
-            const b = document.createElement('div'); b.className = 'text-claim'; b.style.alignSelf = 'flex-end';
-            b.innerHTML = `<p class="text-sm text-gray-200 italic">"${escapeHtml(item.query)}"</p>`;
+            const b = document.createElement('div'); b.className='text-claim'; b.style.alignSelf='flex-end';
+            b.innerHTML=`<p class="text-sm text-gray-200 italic">"${escapeHtml(item.query)}"</p>`;
             chat.appendChild(b);
-            const c = document.createElement('div'); c.className = 'forensic-response'; c.innerHTML = buildTextCard(item);
+            const c = document.createElement('div'); c.className='forensic-response'; c.innerHTML=buildTextCard(item);
             chat.appendChild(c);
-            setTimeout(() => animateCountUp(c.querySelector('.count-up'), 0, item.confidence, 800), 150);
+            setTimeout(()=>animateCountUp(c.querySelector('.count-up'),0,item.confidence,800),150);
         }
     }); lucide.createIcons();
 }
@@ -888,10 +733,9 @@ function deleteSession(id) {
     document.getElementById(id)?.remove();
     let s = JSON.parse(localStorage.getItem('guardai_sessions') || '{}');
     delete s[id]; localStorage.setItem('guardai_sessions', JSON.stringify(s));
-    if (currentSessionId === id) resetToHome();
+    if (currentSessionId===id) resetToHome();
 }
 
-/* ══════════ MODAL ══════════ */
 function openModal() { document.getElementById('upload-modal').classList.replace('hidden','flex'); lucide.createIcons(); }
 function closeModal() { document.getElementById('upload-modal').classList.replace('flex','hidden'); resetUpload(); }
 function handleImagePreview(input) {
@@ -922,38 +766,22 @@ dz.addEventListener('drop', e => {
     const file = e.dataTransfer.files[0];
     if (file) { const dt = new DataTransfer(); dt.items.add(file); document.getElementById('fileInput').files = dt.files; handleImagePreview(document.getElementById('fileInput')); }
 });
-function toggleProfileMenu() {
-    document.getElementById('profileMenu').classList.toggle('hidden');
-}
-function logoutUser() {
-    window.location.href = "/logout";
-}
+function toggleProfileMenu() { document.getElementById('profileMenu').classList.toggle('hidden'); }
+function logoutUser() { window.location.href = "/logout"; }
+
 window.onload = () => {
-    // One-time migration: clear any old sessions with base64 imgData
     try {
         const raw = localStorage.getItem('guardai_sessions');
         if (raw) {
-            const s = JSON.parse(raw);
-            let cleaned = false;
-            Object.values(s).forEach(items => {
-                items.forEach(item => {
-                    if (item.imgData && item.imgData.startsWith('data:')) {
-                        item.imgData = null; // wipe old base64, server path not recoverable
-                        cleaned = true;
-                    }
-                });
-            });
+            const s = JSON.parse(raw); let cleaned = false;
+            Object.values(s).forEach(items => { items.forEach(item => { if (item.imgData && item.imgData.startsWith('data:')) { item.imgData = null; cleaned = true; } }); });
             if (cleaned) localStorage.setItem('guardai_sessions', JSON.stringify(s));
         }
-    } catch(e) {
-        localStorage.removeItem('guardai_sessions');
-    }
-
+    } catch(e) { localStorage.removeItem('guardai_sessions'); }
     const s = JSON.parse(localStorage.getItem('guardai_sessions') || '{}');
     Object.keys(s).forEach(id => {
-        const first = s[id][0];
-        if (!first) return;
-        addSidebarEntry(id, first.type === 'image' ? 'Img: ' + (first.filename || 'image') : 'Claim: ' + (first.query?.substring(0,12) || ''), first.type);
+        const first = s[id][0]; if (!first) return;
+        addSidebarEntry(id, first.type==='image' ? 'Img: '+(first.filename||'image') : 'Claim: '+(first.query?.substring(0,12)||''), first.type);
     });
 };
 </script>
