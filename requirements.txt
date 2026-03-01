@@ -1,9 +1,10 @@
 flask
 gunicorn
-numpy
-pillow
-scikit-learn
-tensorflow
-opencv-python-headless
-joblib
+flask-cors
+flask-sqlalchemy
+flask-dance
+werkzeug
+openai
+requests
 python-dotenv
+
